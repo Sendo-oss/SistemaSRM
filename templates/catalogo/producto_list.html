@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Productos{% endblock %}
+{% block page_heading %}Productos{% endblock %}
+{% block page_subheading %}Listado simple de cremas registradas para control interno.{% endblock %}
+
+{% block content %}
+<div class="module-shell">
+    <section class="module-panel module-header">
+        <div class="module-title-block">
+            <span class="module-kicker">Catalogo</span>
+            <h2 class="module-title">Cremas registradas</h2>
+            <p class="module-copy">Consulta las cremas creadas para control interno y mantén una vista ordenada del stock disponible.</p>
+        </div>
+        <div class="module-actions">
+            <a class="btn btn-primary" href="{% url 'catalogo:crear' %}">Nueva crema</a>
+        </div>
+    </section>
+
+    <form class="module-panel search-panel" method="get">
+        <div class="row g-2 align-items-center">
+            <div class="col-lg-10">
+                <input class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar por nombre de crema">
+            </div>
+            <div class="col-lg-2 d-grid">
+                <button class="btn btn-outline-primary" type="submit">Buscar</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="card soft-card table-shell">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Categoria</th>
+                        <th>Stock total</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                        <tr>
+                            <td><div class="fw-semibold text-dark">{{ producto.nombre }}</div></td>
+                            <td><span class="soft-badge">{{ producto.categoria }}</span></td>
+                            <td><span class="soft-badge mint">{{ producto.stock_disponible }}</span></td>
+                            <td><a class="table-link" href="{% url 'catalogo:detalle' producto.pk %}">Ver detalle</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state">
+                                    <strong>No hay cremas registradas.</strong>
+                                    Cuando agregues una nueva crema, aparecerá aquí para su control.
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

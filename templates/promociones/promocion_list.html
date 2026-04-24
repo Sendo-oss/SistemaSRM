@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Descuentos{% endblock %}
+{% block page_heading %}Descuentos{% endblock %}
+{% block page_subheading %}Descuentos vinculados a la rentabilidad real de cada producto.{% endblock %}
+
+{% block content %}
+<div class="module-shell">
+    <section class="row g-3">
+        <div class="col-md-6">
+            <div class="metric-card mint">
+                <div class="metric-label">Descuentos rentables</div>
+                <div class="metric-value">{{ descuentos_rentables }}</div>
+                <p class="metric-note">Promociones que mantienen el margen mínimo del producto.</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="metric-card sun">
+                <div class="metric-label">Por revisar</div>
+                <div class="metric-value">{{ descuentos_no_rentables }}</div>
+                <p class="metric-note">Configuraciones que requieren ajuste antes de aplicarse.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="module-panel module-header">
+        <div class="module-title-block">
+            <span class="module-kicker">Rentabilidad</span>
+            <h1 class="module-title">Descuentos por producto</h1>
+            <p class="module-copy">Controla cuánto puedes descontar sin afectar la utilidad real de cada crema.</p>
+        </div>
+        <div class="module-actions">
+            <a class="btn btn-primary" href="{% url 'promociones:crear' %}">Nuevo descuento</a>
+        </div>
+    </section>
+
+    <form class="module-panel search-panel" method="get">
+        <div class="row g-2 align-items-center">
+            <div class="col-lg-10">
+                <input class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar por nombre del descuento o producto">
+            </div>
+            <div class="col-lg-2 d-grid">
+                <button class="btn btn-outline-primary" type="submit">Buscar</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="card soft-card table-shell">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Descuento</th>
+                        <th>Producto</th>
+                        <th>Vigencia</th>
+                        <th>Precio final</th>
+                        <th>Rentable</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for promocion in promociones %}
+                        <tr>
+                            <td><div class="fw-semibold text-dark">{{ promocion.nombre }}</div></td>
+                            <td>{{ promocion.producto|default:"-" }}</td>
+                            <td>{{ promocion.fecha_inicio|date:"d/m/Y" }} - {{ promocion.fecha_fin|date:"d/m/Y" }}</td>
+                            <td>{% if promocion.precio_descuento_aplicado is not None %}${{ promocion.precio_descuento_aplicado }}{% else %}-{% endif %}</td>
+                            <td>
+                                {% if promocion.es_rentable is None %}
+                                    <span class="soft-badge">Sin producto</span>
+                                {% elif promocion.es_rentable %}
+                                    <span class="soft-badge mint">Si</span>
+                                {% else %}
+                                    <span class="soft-badge sun">No</span>
+                                {% endif %}
+                            </td>
+                            <td><a class="table-link" href="{% url 'promociones:detalle' promocion.pk %}">Ver detalle</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <strong>No hay descuentos registrados.</strong>
+                                    Crea un descuento y vincúlalo a un producto para revisar su rentabilidad.
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

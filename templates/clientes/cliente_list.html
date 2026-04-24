@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Clientes{% endblock %}
+
+{% block content %}
+<div class="module-shell">
+    <section class="module-panel module-header">
+        <div class="module-title-block">
+            <span class="module-kicker">Clientes</span>
+            <h1 class="module-title">Directorio de clientes</h1>
+            <p class="module-copy">Encuentra rápidamente clientes por nombre, teléfono, ubicación, dirección o identificación y entra a su ficha completa.</p>
+        </div>
+        <div class="module-actions">
+            <a class="btn btn-primary" href="{% url 'clientes:crear' %}">Nuevo cliente</a>
+        </div>
+    </section>
+
+    <form class="module-panel search-panel" method="get">
+        <div class="row g-2 align-items-center">
+            <div class="col-lg-10">
+                <input class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar por nombre, telefono, ubicacion, direccion o cedula">
+            </div>
+            <div class="col-lg-2 d-grid">
+                <button class="btn btn-outline-primary" type="submit">Buscar</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="card soft-card table-shell">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Identificacion</th>
+                        <th>Telefono</th>
+                        <th>Ubicaciones</th>
+                        <th>Direccion</th>
+                        <th>Estado</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cliente in clientes %}
+                        <tr>
+                            <td><div class="fw-semibold text-dark">{{ cliente.nombre_mostrado }}</div></td>
+                            <td>{{ cliente.identificacion|default:"-" }}</td>
+                            <td>{{ cliente.telefono|default:"-" }}</td>
+                            <td>
+                                {{ cliente.total_ubicaciones }}
+                                {% if cliente.total_ubicaciones %}
+                                    - {{ cliente.ubicacion_resumen|truncatechars:35 }}
+                                {% else %}
+                                    - -
+                                {% endif %}
+                            </td>
+                            <td>{{ cliente.direccion|default:"-"|truncatechars:40 }}</td>
+                            <td><span class="soft-badge {% if cliente.estado == 'ACTIVO' %}mint{% else %}sun{% endif %}">{{ cliente.get_estado_display }}</span></td>
+                            <td><a class="table-link" href="{% url 'clientes:detalle' cliente.pk %}">Ver ficha</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <strong>No hay clientes registrados.</strong>
+                                    Empieza creando tu primer cliente para llevar seguimiento, agenda y control visual.
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

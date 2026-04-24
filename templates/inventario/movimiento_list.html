@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Historial de inventario{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Historial de movimientos</h1>
+        <div class="text-secondary">Registro de ingresos y traslados de inventario.</div>
+    </div>
+    <a class="btn btn-primary" href="{% url 'inventario:crear_movimiento' %}">Nuevo movimiento</a>
+</div>
+
+<form class="card soft-card card-body mb-3" method="get">
+    <div class="row g-2">
+        <div class="col-md-10">
+            <input class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar por producto o nota">
+        </div>
+        <div class="col-md-2 d-grid">
+            <button class="btn btn-outline-primary" type="submit">Buscar</button>
+        </div>
+    </div>
+</form>
+
+<div class="card soft-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Producto</th>
+                    <th>Tipo</th>
+                    <th>Origen</th>
+                    <th>Destino</th>
+                    <th>Cantidad</th>
+                    <th>Usuario</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for movimiento in movimientos %}
+                    <tr>
+                        <td>{{ movimiento.fecha_movimiento|date:"d/m/Y H:i" }}</td>
+                        <td>{{ movimiento.producto.nombre }}</td>
+                        <td>{{ movimiento.get_tipo_movimiento_display }}</td>
+                        <td>{{ movimiento.ubicacion_origen|default:"-" }}</td>
+                        <td>{{ movimiento.ubicacion_destino }}</td>
+                        <td>{{ movimiento.cantidad }}</td>
+                        <td>{{ movimiento.usuario }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7">No hay movimientos registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

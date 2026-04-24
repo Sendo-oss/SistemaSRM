@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Fotos de seguimiento{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Fotos y archivos</h1>
+        <div class="text-secondary">Filtra las imagenes enviadas por cliente, texto o fecha.</div>
+    </div>
+    <a class="btn btn-outline-primary" href="{% url 'seguimiento:lista' %}">Volver a seguimientos</a>
+</div>
+
+<form class="card soft-card card-body mb-3" method="get">
+    <div class="row g-2">
+        <div class="col-lg-5">
+            <input class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar por cliente, telefono o descripcion">
+        </div>
+        <div class="col-lg-3">
+            <select class="form-select" name="cliente">
+                <option value="">Todos los clientes</option>
+                {% for cliente in clientes %}
+                    <option value="{{ cliente.pk }}" {% if request.GET.cliente == cliente.pk|stringformat:"s" %}selected{% endif %}>{{ cliente.nombre_mostrado }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-2">
+            <input class="form-control" type="date" name="fecha" value="{{ request.GET.fecha }}">
+        </div>
+        <div class="col-lg-2 d-grid">
+            <button class="btn btn-outline-primary" type="submit">Filtrar</button>
+        </div>
+    </div>
+</form>
+
+<div class="row g-3">
+    {% for foto in fotos %}
+        <div class="col-md-6 col-xl-4">
+            <div class="card soft-card h-100">
+                <div class="card-body">
+                    <div class="fw-semibold">{{ foto.cliente.nombre_mostrado }}</div>
+                    <div class="text-secondary small mb-2">{{ foto.fecha_envio|date:"d/m/Y H:i" }}</div>
+                    <div class="mb-3">{{ foto.descripcion|default:"Sin descripcion" }}</div>
+                    <a class="btn btn-sm btn-outline-dark" href="{{ foto.archivo.url }}" target="_blank">Abrir archivo</a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="card soft-card">
+                <div class="card-body text-secondary">No hay imagenes que coincidan con el filtro.</div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

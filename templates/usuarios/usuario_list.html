@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Usuarios{% endblock %}
+{% block page_heading %}Usuarios del sistema{% endblock %}
+{% block page_subheading %}Administra accesos con un maximo de dos administradores y trabajadores con funciones limitadas.{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="metric-card teal">
+            <div class="metric-label">Administradores</div>
+            <div class="metric-value">{{ total_administradores }}</div>
+            <p class="metric-note">Maximo permitido: 2 usuarios.</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="metric-card mint">
+            <div class="metric-label">Trabajadores</div>
+            <div class="metric-value">{{ total_trabajadores }}</div>
+            <p class="metric-note">Acceso limitado a funciones operativas.</p>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h3 mb-0">Usuarios</h2>
+    <a class="btn btn-primary rounded-pill px-4" href="{% url 'usuarios:crear' %}">Nuevo usuario</a>
+</div>
+
+<form class="card soft-card card-body mb-3" method="get">
+    <div class="row g-2">
+        <div class="col-md-10">
+            <input class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar por usuario, nombre o telefono">
+        </div>
+        <div class="col-md-2 d-grid">
+            <button class="btn btn-outline-primary" type="submit">Buscar</button>
+        </div>
+    </div>
+</form>
+
+<div class="card soft-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Nombre</th>
+                    <th>Telefono</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                    <tr>
+                        <td>{{ usuario.username }}</td>
+                        <td>{{ usuario.get_full_name|default:"-" }}</td>
+                        <td>{{ usuario.telefono|default:"-" }}</td>
+                        <td>{{ usuario.get_rol_display }}</td>
+                        <td>{% if usuario.is_active %}Activo{% else %}Inactivo{% endif %}</td>
+                        <td><a href="{% url 'usuarios:editar' usuario.pk %}">Editar</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6">No hay usuarios registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

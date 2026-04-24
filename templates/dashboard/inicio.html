@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_heading %}Control y seguimiento clientes{% endblock %}
+{% block page_subheading %}Panel general con clientes, seguimientos, agenda, imagenes e inventario.{% endblock %}
+
+{% block content %}
+<section class="hero-panel mb-4">
+    <div class="hero-kicker">Vista general</div>
+    <h2 class="hero-title">Un panel claro para revisar clientes, gestiones pendientes y movimiento interno sin perder contexto.</h2>
+    <p class="hero-copy">
+        Desde aqui puedes detectar seguimientos urgentes, revisar citas activas y controlar el stock entre casa y local con una vista mucho mas ordenada.
+    </p>
+    <div class="hero-meta">
+        <div class="hero-chip">Seguimientos pendientes: {{ seguimientos_pendientes }}</div>
+        <div class="hero-chip">Citas activas: {{ citas_agendadas }}</div>
+        <div class="hero-chip">Cremas registradas: {{ total_productos }}</div>
+    </div>
+</section>
+
+<section class="quick-grid mb-4">
+    <a class="quick-card" href="{% url 'clientes:lista' %}">
+        <div class="quick-card-title">Buscar cliente</div>
+        <p class="quick-card-copy">Encuentra clientes por nombre, telefono, direccion o cedula.</p>
+    </a>
+    <a class="quick-card" href="{% url 'seguimiento:agenda' %}">
+        <div class="quick-card-title">Abrir agenda</div>
+        <p class="quick-card-copy">Revisa el calendario mensual y crea nuevas citas rapidamente.</p>
+    </a>
+    <a class="quick-card" href="{% url 'seguimiento:fotos' %}">
+        <div class="quick-card-title">Ver imagenes</div>
+        <p class="quick-card-copy">Accede a las fotos enviadas y filtralas por cliente o fecha.</p>
+    </a>
+    <a class="quick-card" href="{% url 'inventario:crear_movimiento' %}">
+        <div class="quick-card-title">Mover inventario</div>
+        <p class="quick-card-copy">Registra ingresos a casa o traslados entre casa y local.</p>
+    </a>
+</section>
+
+<section class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-4">
+        <div class="metric-card teal">
+            <div class="metric-label">Clientes</div>
+            <div class="metric-value">{{ total_clientes }}</div>
+            <p class="metric-note">Base total de personas registradas en el sistema.</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-4">
+        <div class="metric-card sun">
+            <div class="metric-label">Seguimientos</div>
+            <div class="metric-value">{{ seguimientos_pendientes }}</div>
+            <p class="metric-note">Gestiones que aun requieren accion o respuesta.</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-4">
+        <div class="metric-card mint">
+            <div class="metric-label">Citas activas</div>
+            <div class="metric-value">{{ citas_agendadas }}</div>
+            <p class="metric-note">Citas ya programadas dentro del flujo de seguimiento.</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-4">
+        <div class="metric-card rose">
+            <div class="metric-label">Cremas registradas</div>
+            <div class="metric-value">{{ total_productos }}</div>
+            <p class="metric-note">Productos disponibles para control de inventario.</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-4">
+        <div class="metric-card lav">
+            <div class="metric-label">Stock en casa</div>
+            <div class="metric-value">{{ total_stock_casa }}</div>
+            <p class="metric-note">Existencia actual en la ubicacion de resguardo principal.</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-4">
+        <div class="metric-card sky">
+            <div class="metric-label">Stock en local</div>
+            <div class="metric-value">{{ total_stock_local }}</div>
+            <p class="metric-note">Unidades disponibles en el punto operativo del local.</p>
+        </div>
+    </div>
+</section>
+
+<section class="row g-4">
+    <div class="col-lg-7">
+        <div class="soft-card section-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="section-title">Seguimientos pendientes</h2>
+                    <div class="section-subtitle">Clientes que requieren seguimiento, cita o respuesta.</div>
+                </div>
+                <a href="{% url 'seguimiento:lista' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Ver todos</a>
+            </div>
+            <div class="list-group list-group-flush list-clean">
+                {% for seguimiento in seguimientos_pendientes_lista %}
+                    <a href="{% url 'seguimiento:detalle' seguimiento.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <div class="fw-bold">{{ seguimiento.cliente.nombre_mostrado }}</div>
+                                <div class="text-secondary small mt-1">
+                                    {{ seguimiento.get_tipo_interaccion_display }}{% if seguimiento.asunto %} - {{ seguimiento.asunto }}{% endif %}
+                                </div>
+                            </div>
+                            <span class="badge badge-soft">{{ seguimiento.get_estado_display }}</span>
+                        </div>
+                    </a>
+                {% empty %}
+                    <div class="text-secondary">No hay seguimientos pendientes por ahora.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="soft-card section-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="section-title">Movimientos recientes</h2>
+                    <div class="section-subtitle">Ultimos ingresos y traslados de inventario.</div>
+                </div>
+                <a href="{% url 'inventario:movimientos' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Historial</a>
+            </div>
+            <div class="list-group list-group-flush list-clean">
+                {% for movimiento in movimientos_recientes %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <div class="fw-bold">{{ movimiento.producto.nombre }}</div>
+                                <div class="text-secondary small mt-1">{{ movimiento.get_tipo_movimiento_display }} - {{ movimiento.cantidad }}</div>
+                            </div>
+                            <div class="small text-secondary text-end">{{ movimiento.fecha_movimiento|date:"d/m/Y H:i" }}</div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-secondary">Aun no hay movimientos de inventario registrados.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

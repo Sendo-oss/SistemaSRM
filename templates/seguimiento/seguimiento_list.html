@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Seguimientos{% endblock %}
+
+{% block content %}
+<div class="module-shell">
+    <section class="module-panel module-header">
+        <div class="module-title-block">
+            <span class="module-kicker">Seguimiento</span>
+            <h1 class="module-title">Control de gestiones y pendientes</h1>
+            <p class="module-copy">Administra llamadas, citas, envíos de fotos y seguimientos pendientes desde una sola vista clara.</p>
+        </div>
+        <div class="module-actions">
+            <a class="btn btn-primary" href="{% url 'seguimiento:crear' %}">Nuevo seguimiento</a>
+        </div>
+    </section>
+
+    <form class="module-panel search-panel" method="get">
+        <div class="row g-2 align-items-center">
+            <div class="col-lg-5">
+                <input class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar por cliente, telefono, direccion o asunto">
+            </div>
+            <div class="col-lg-3">
+                <select class="form-select" name="tipo">
+                    <option value="">Todos los tipos</option>
+                    {% for value, label in tipos %}
+                        <option value="{{ value }}" {% if request.GET.tipo == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <select class="form-select" name="estado">
+                    <option value="">Todos los estados</option>
+                    {% for value, label in estados %}
+                        <option value="{{ value }}" {% if request.GET.estado == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2 d-grid">
+                <button class="btn btn-outline-primary" type="submit">Filtrar</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="card soft-card table-shell">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Tipo</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Tratamiento</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for seguimiento in seguimientos %}
+                        <tr>
+                            <td><div class="fw-semibold text-dark">{{ seguimiento.cliente.nombre_mostrado }}</div></td>
+                            <td><span class="soft-badge">{{ seguimiento.get_tipo_interaccion_display }}</span></td>
+                            <td><span class="soft-badge {% if seguimiento.estado == 'PENDIENTE' %}sun{% elif seguimiento.estado == 'COMPLETADO' %}mint{% else %}rose{% endif %}">{{ seguimiento.get_estado_display }}</span></td>
+                            <td>{{ seguimiento.fecha_referencia|date:"d/m/Y H:i" }}</td>
+                            <td><span class="soft-badge {% if seguimiento.tratamiento_aceptado %}mint{% else %}sun{% endif %}">{% if seguimiento.tratamiento_aceptado %}Aceptado{% else %}Pendiente{% endif %}</span></td>
+                            <td><a class="table-link" href="{% url 'seguimiento:detalle' seguimiento.pk %}">Ver detalle</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <strong>No hay seguimientos registrados.</strong>
+                                    Cuando registres llamadas, citas o envíos, aparecerán organizados aquí.
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

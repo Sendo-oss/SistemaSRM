@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Descuento{% endblock %}
+{% block page_heading %}Descuentos{% endblock %}
+{% block page_subheading %}Configura descuentos respetando la rentabilidad minima del producto.{% endblock %}
+
+{% block content %}
+<div class="module-shell">
+    <section class="module-panel module-header">
+        <div class="module-title-block">
+            <span class="module-kicker">Configuracion</span>
+            <h1 class="module-title">{% if object %}Editar descuento{% else %}Nuevo descuento{% endif %}</h1>
+            <p class="module-copy">Si seleccionas un producto, el sistema validara que el descuento siga siendo rentable.</p>
+        </div>
+        <div class="module-actions">
+            <a class="btn btn-outline-primary" href="{% url 'promociones:lista' %}">Volver</a>
+        </div>
+    </section>
+
+    <div class="soft-card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="card-note mb-4">
+                    Para calcular descuentos rentables necesitas que el producto tenga precio de venta, costo base y margen minimo configurados.
+                </div>
+                <div class="row g-3">
+                    {% for field in form %}
+                        {% if field.name == 'activa' %}
+                            <div class="col-12">
+                                <div class="form-check form-switch mt-2">
+                                    {{ field }}
+                                    <label class="form-check-label ms-2" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                </div>
+                                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                                {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+                            </div>
+                        {% else %}
+                            <div class="{% if field.name == 'descripcion' or field.name == 'condicion_aplicacion' %}col-12{% else %}col-md-6{% endif %}">
+                                <label class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                                {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <button class="btn btn-primary mt-4" type="submit">Guardar descuento</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

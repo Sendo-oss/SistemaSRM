@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar movimiento{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Registrar movimiento de inventario</h1>
+        <div class="text-secondary">Usa ingreso para mercaderia nueva y transferencia para mover entre casa y local.</div>
+    </div>
+    <a href="{% url 'inventario:lista' %}">Volver</a>
+</div>
+
+<div class="card soft-card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+                {% for field in form %}
+                    <div class="col-md-6">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <button class="btn btn-primary mt-4" type="submit">Guardar movimiento</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

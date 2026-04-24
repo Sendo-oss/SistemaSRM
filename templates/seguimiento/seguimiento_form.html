@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion de seguimiento{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">{% if object %}Editar seguimiento{% else %}Nuevo seguimiento{% endif %}</h1>
+        {% if cliente_preseleccionado %}
+            <div class="text-secondary">Cliente: {{ cliente_preseleccionado.nombre_mostrado }}</div>
+        {% endif %}
+    </div>
+    <a href="{% url 'seguimiento:lista' %}">Volver</a>
+</div>
+
+<div class="card soft-card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row g-3">
+                {% for field in form %}
+                    {% if field.name == 'tratamiento_aceptado' %}
+                        <div class="col-12">
+                            <div class="form-check form-switch mt-2">
+                                {{ field }}
+                                <label class="form-check-label ms-2" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            </div>
+                            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+                        </div>
+                    {% else %}
+                        <div class="{% if field.name == 'observacion' %}col-12{% else %}col-md-6{% endif %}">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="h5 mb-0">Fotos o archivos enviados</h2>
+                    <div class="text-secondary small">Puedes adjuntar una o varias evidencias del tratamiento.</div>
+                </div>
+                <button class="btn btn-sm btn-outline-primary" type="button" id="agregar-foto">Agregar fila</button>
+            </div>
+
+            {{ formset.management_form }}
+            <div id="formset-contenedor" class="d-grid gap-3">
+                {% for foto_form in formset %}
+                    <div class="border rounded p-3 formset-item">
+                        {% for hidden in foto_form.hidden_fields %}{{ hidden }}{% endfor %}
+                        <div class="row g-3">
+                            {% for field in foto_form.visible_fields %}
+                                <div class="{% if field.name == 'DELETE' %}col-12{% else %}col-md-6{% endif %}">
+                                    <label class="form-label">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <button class="btn btn-primary mt-4" type="submit">Guardar seguimiento</button>
+        </form>
+    </div>
+</div>
+
+<template id="formset-empty">
+    <div class="border rounded p-3 formset-item">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label" for="id_fotos-__prefix__-archivo">Imagen o archivo</label>
+                <input type="file" name="fotos-__prefix__-archivo" class="form-control" id="id_fotos-__prefix__-archivo">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="id_fotos-__prefix__-descripcion">Descripcion</label>
+                <input type="text" name="fotos-__prefix__-descripcion" class="form-control" id="id_fotos-__prefix__-descripcion">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="id_fotos-__prefix__-fecha_envio">Fecha de envio</label>
+                <input type="datetime-local" name="fotos-__prefix__-fecha_envio" class="form-control" id="id_fotos-__prefix__-fecha_envio">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="id_fotos-__prefix__-enviado_al_cliente">Enviado al cliente</label>
+                <select name="fotos-__prefix__-enviado_al_cliente" class="form-select" id="id_fotos-__prefix__-enviado_al_cliente">
+                    <option value="True" selected>Si</option>
+                    <option value="">No</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+    const addButton = document.getElementById("agregar-foto");
+    const totalForms = document.getElementById("id_fotos-TOTAL_FORMS");
+    const emptyForm = document.getElementById("formset-empty");
+    const container = document.getElementById("formset-contenedor");
+
+    if (addButton && totalForms && emptyForm && container) {
+        addButton.addEventListener("click", () => {
+            const index = Number(totalForms.value);
+            const content = emptyForm.innerHTML.replaceAll("__prefix__", index);
+            container.insertAdjacentHTML("beforeend", content);
+            totalForms.value = index + 1;
+        });
+    }
+</script>
+{% endblock %}

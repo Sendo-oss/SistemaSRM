@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">{{ cliente.nombre_mostrado }}</h1>
+        <div class="text-secondary">Ficha general del cliente y su seguimiento</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" href="{% url 'clientes:editar' cliente.pk %}">Editar</a>
+        <a class="btn btn-primary" href="{% url 'seguimiento:crear' %}?cliente={{ cliente.pk }}&tipo=CITA">Agendar cita</a>
+        <a class="btn btn-dark" href="{% url 'seguimiento:crear' %}?cliente={{ cliente.pk }}&tipo=ENVIO_FOTOS">Enviar fotos</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card soft-card">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Datos del cliente</h2>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Nombre</dt><dd class="col-sm-8">{{ cliente.nombre_completo|default:"-" }}</dd>
+                    <dt class="col-sm-4">Identificacion</dt><dd class="col-sm-8">{{ cliente.identificacion|default:"-" }}</dd>
+                    <dt class="col-sm-4">Telefono</dt><dd class="col-sm-8">{{ cliente.telefono|default:"-" }}</dd>
+                    <dt class="col-sm-4">Direccion</dt><dd class="col-sm-8">{{ cliente.direccion|default:"-" }}</dd>
+                    <dt class="col-sm-4">Nacimiento</dt><dd class="col-sm-8">{{ cliente.fecha_nacimiento|date:"d/m/Y"|default:"-" }}</dd>
+                    <dt class="col-sm-4">Observaciones</dt><dd class="col-sm-8">{{ cliente.observaciones|default:"-" }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card soft-card mt-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Ubicaciones registradas</h2>
+                <div class="list-group list-group-flush">
+                    {% for ubicacion in ubicaciones %}
+                        <div class="list-group-item px-0">
+                            <div class="fw-semibold">{{ ubicacion.descripcion|default:"Ubicacion sin descripcion" }}</div>
+                            <div class="text-secondary small mb-2">{{ ubicacion.enlace|default:"-" }}</div>
+                            {% if ubicacion.es_enlace %}
+                                <a class="btn btn-sm btn-outline-primary" href="{{ ubicacion.enlace }}" target="_blank">Abrir ubicacion</a>
+                            {% endif %}
+                        </div>
+                    {% empty %}
+                        <div class="text-secondary">Aun no se registraron ubicaciones para este cliente.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card soft-card mt-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Seguimientos pendientes</h2>
+                    <a href="{% url 'seguimiento:lista' %}?q={{ cliente.telefono|default:cliente.nombre_mostrado }}">Ver mas</a>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for seguimiento in seguimientos_pendientes %}
+                        <a href="{% url 'seguimiento:detalle' seguimiento.pk %}" class="list-group-item list-group-item-action px-0">
+                            <div class="fw-semibold">{{ seguimiento.get_tipo_interaccion_display }}</div>
+                            <div class="text-secondary small">
+                                {% if seguimiento.fecha_cita %}{{ seguimiento.fecha_cita|date:"d/m/Y H:i" }}{% else %}{{ seguimiento.fecha_referencia|date:"d/m/Y H:i" }}{% endif %}
+                            </div>
+                        </a>
+                    {% empty %}
+                        <div class="text-secondary">No hay gestiones pendientes para este cliente.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card soft-card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Fotos enviadas</h2>
+                    <a href="{% url 'seguimiento:fotos' %}?cliente={{ cliente.pk }}">Abrir apartado de imagenes</a>
+                </div>
+                <form class="row g-2 mb-3" method="get">
+                    <div class="col-sm-8">
+                        <input class="form-control" type="date" name="fecha" value="{{ filtro_fecha_foto }}">
+                    </div>
+                    <div class="col-sm-4 d-grid">
+                        <button class="btn btn-outline-primary" type="submit">Filtrar por fecha</button>
+                    </div>
+                </form>
+                <div class="row g-3">
+                    {% for foto in fotos %}
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 h-100">
+                                <div class="fw-semibold">{{ foto.descripcion|default:"Imagen enviada" }}</div>
+                                <div class="text-secondary small mb-2">{{ foto.fecha_envio|date:"d/m/Y H:i" }}</div>
+                                <a class="btn btn-sm btn-outline-dark" href="{{ foto.archivo.url }}" target="_blank">Abrir archivo</a>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12 text-secondary">Aun no hay fotos registradas para este cliente.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card soft-card">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Historial reciente</h2>
+                <div class="list-group list-group-flush">
+                    {% for seguimiento in ultimos_seguimientos %}
+                        <a href="{% url 'seguimiento:detalle' seguimiento.pk %}" class="list-group-item list-group-item-action px-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-semibold">{{ seguimiento.get_tipo_interaccion_display }}{% if seguimiento.asunto %} - {{ seguimiento.asunto }}{% endif %}</div>
+                                    <div class="text-secondary small">{{ seguimiento.observacion|default:"Sin observacion"|truncatechars:100 }}</div>
+                                </div>
+                                <span class="badge badge-soft">{{ seguimiento.get_estado_display }}</span>
+                            </div>
+                        </a>
+                    {% empty %}
+                        <div class="text-secondary">Este cliente todavia no tiene historial.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

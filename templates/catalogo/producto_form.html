@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Nueva crema{% endblock %}
+{% block page_heading %}Productos{% endblock %}
+{% block page_subheading %}Registra cremas y define sus datos de rentabilidad para descuentos futuros.{% endblock %}
+
+{% block content %}
+<div class="module-shell">
+    <section class="module-panel module-header">
+        <div class="module-title-block">
+            <span class="module-kicker">Producto</span>
+            <h1 class="module-title">{% if object %}Editar crema{% else %}Nueva crema{% endif %}</h1>
+            <p class="module-copy">Además del nombre, ahora puedes guardar precio, costo base y margen mínimo para calcular descuentos rentables.</p>
+        </div>
+        <div class="module-actions">
+            <a class="btn btn-outline-primary" href="{% url 'catalogo:lista' %}">Volver</a>
+        </div>
+    </section>
+
+    <div class="soft-card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="card-note mb-4">
+                    El sistema seguirá guardando la crema dentro de la categoría <strong>Cremas</strong>. Los datos de precio, costo y margen se usan para calcular la rentabilidad y los descuentos máximos permitidos.
+                </div>
+                <div class="row g-3">
+                    {% for field in form %}
+                        <div class="{% if field.name == 'nombre' %}col-lg-6{% else %}col-md-6 col-lg-3{% endif %}">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <button class="btn btn-primary mt-4" type="submit">Guardar crema</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Inventario</h1>
+    <a class="btn btn-primary" href="{% url 'inventario:crear' %}">Nueva materia prima</a>
+</div>
+
+<form class="card card-body mb-3" method="get">
+    <div class="row g-2">
+        <div class="col-md-10"><input class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar por nombre, código o lote"></div>
+        <div class="col-md-2 d-grid"><button class="btn btn-outline-primary" type="submit">Buscar</button></div>
+    </div>
+</form>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Código</th><th>Nombre</th><th>Lote</th><th>Proveedor</th><th>Stock</th><th></th></tr></thead>
+            <tbody>
+                {% for materia_prima in materias_primas %}
+                    <tr>
+                        <td>{{ materia_prima.codigo }}</td>
+                        <td>{{ materia_prima.nombre }}</td>
+                        <td>{{ materia_prima.lote }}</td>
+                        <td>{{ materia_prima.proveedor }}</td>
+                        <td>{{ materia_prima.cantidad_disponible }} {{ materia_prima.unidad_medida }}</td>
+                        <td><a href="{% url 'inventario:detalle' materia_prima.pk %}">Ver</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6">No hay materias primas registradas.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

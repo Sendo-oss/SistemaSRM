@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Proveedores</h1>
+    <a class="btn btn-primary" href="{% url 'proveedores:crear' %}">Nuevo proveedor</a>
+</div>
+
+<form class="card card-body mb-3" method="get">
+    <div class="row g-2">
+        <div class="col-md-10"><input class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar proveedor"></div>
+        <div class="col-md-2 d-grid"><button class="btn btn-outline-primary" type="submit">Buscar</button></div>
+    </div>
+</form>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Empresa</th><th>Contacto</th><th>Teléfono</th><th>Correo</th><th></th></tr></thead>
+            <tbody>
+                {% for proveedor in proveedores %}
+                    <tr>
+                        <td>{{ proveedor.empresa }}</td>
+                        <td>{{ proveedor.contacto|default:"-" }}</td>
+                        <td>{{ proveedor.telefono|default:"-" }}</td>
+                        <td>{{ proveedor.correo|default:"-" }}</td>
+                        <td><a href="{% url 'proveedores:detalle' proveedor.pk %}">Ver</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5">No hay proveedores registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

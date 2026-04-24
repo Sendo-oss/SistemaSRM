@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Seguimiento{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">{{ seguimiento.cliente.nombre_mostrado }}</h1>
+        <div class="text-secondary">{{ seguimiento.get_tipo_interaccion_display }}{% if seguimiento.asunto %} · {{ seguimiento.asunto }}{% endif %}</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" href="{% url 'seguimiento:editar' seguimiento.pk %}">Editar</a>
+        <a class="btn btn-outline-dark" href="{% url 'clientes:detalle' seguimiento.cliente.pk %}">Ver cliente</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card soft-card">
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Estado</dt><dd class="col-sm-7">{{ seguimiento.get_estado_display }}</dd>
+                    <dt class="col-sm-5">Fecha de contacto</dt><dd class="col-sm-7">{{ seguimiento.fecha_interaccion|date:"d/m/Y H:i" }}</dd>
+                    <dt class="col-sm-5">Fecha de cita</dt><dd class="col-sm-7">{{ seguimiento.fecha_cita|date:"d/m/Y H:i"|default:"-" }}</dd>
+                    <dt class="col-sm-5">Proximo contacto</dt><dd class="col-sm-7">{{ seguimiento.proximo_contacto|date:"d/m/Y H:i"|default:"-" }}</dd>
+                    <dt class="col-sm-5">Tratamiento aceptado</dt><dd class="col-sm-7">{% if seguimiento.tratamiento_aceptado %}Si{% else %}No{% endif %}</dd>
+                    <dt class="col-sm-5">Carpeta creada</dt><dd class="col-sm-7">{{ seguimiento.carpeta_tratamiento|default:"-" }}</dd>
+                    <dt class="col-sm-5">Observacion</dt><dd class="col-sm-7">{{ seguimiento.observacion|default:"-" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card soft-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Archivos enviados</h2>
+                    <a href="{% url 'seguimiento:fotos' %}?cliente={{ seguimiento.cliente.pk }}">Filtrar imagenes del cliente</a>
+                </div>
+                <div class="row g-3">
+                    {% for foto in seguimiento.fotos.all %}
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 h-100">
+                                <div class="fw-semibold">{{ foto.descripcion|default:"Imagen enviada" }}</div>
+                                <div class="text-secondary small mb-2">{{ foto.fecha_envio|date:"d/m/Y H:i" }}</div>
+                                <a class="btn btn-sm btn-outline-dark" href="{{ foto.archivo.url }}" target="_blank">Abrir archivo</a>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12 text-secondary">No se cargaron fotos en este seguimiento.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

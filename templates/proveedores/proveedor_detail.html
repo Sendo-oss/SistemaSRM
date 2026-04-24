@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">{{ proveedor.empresa }}</h1>
+    <a class="btn btn-outline-primary" href="{% url 'proveedores:editar' proveedor.pk %}">Editar</a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Contacto</dt><dd class="col-sm-9">{{ proveedor.contacto|default:"-" }}</dd>
+            <dt class="col-sm-3">Teléfono</dt><dd class="col-sm-9">{{ proveedor.telefono|default:"-" }}</dd>
+            <dt class="col-sm-3">Correo</dt><dd class="col-sm-9">{{ proveedor.correo|default:"-" }}</dd>
+            <dt class="col-sm-3">Dirección</dt><dd class="col-sm-9">{{ proveedor.direccion|default:"-" }}</dd>
+            <dt class="col-sm-3">Productos</dt><dd class="col-sm-9">{{ proveedor.productos_suministrados|default:"-" }}</dd>
+            <dt class="col-sm-3">Observaciones</dt><dd class="col-sm-9">{{ proveedor.observaciones|default:"-" }}</dd>
+        </dl>
+    </div>
+</div>
+{% endblock %}
+

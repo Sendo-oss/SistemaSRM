@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Pagos</h1>
+    <a class="btn btn-primary" href="{% url 'pagos:crear' %}">Nuevo pago</a>
+</div>
+
+<form class="card card-body mb-3" method="get">
+    <div class="row g-2">
+        <div class="col-md-10"><input class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar por referencia o cliente"></div>
+        <div class="col-md-2 d-grid"><button class="btn btn-outline-primary" type="submit">Buscar</button></div>
+    </div>
+</form>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Pedido</th><th>Método</th><th>Monto</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+                {% for pago in pagos %}
+                    <tr>
+                        <td>#{{ pago.pedido.pk }}</td>
+                        <td>{{ pago.get_metodo_pago_display }}</td>
+                        <td>${{ pago.monto }}</td>
+                        <td>{{ pago.get_estado_display }}</td>
+                        <td><a href="{% url 'pagos:detalle' pago.pk %}">Ver</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5">No hay pagos registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

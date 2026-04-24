@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">{% if object %}Editar cliente{% else %}Nuevo cliente{% endif %}</h1>
+    <a href="{% url 'clientes:lista' %}">Volver</a>
+</div>
+
+<div class="card soft-card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="alert alert-light border mb-4">
+                Puedes registrar varias ubicaciones del cliente y acompañarlas con una descripcion corta para identificarlas mejor.
+            </div>
+            <div class="row g-3">
+                {% for field in form %}
+                    <div class="{% if field.name == 'direccion' or field.name == 'observaciones' %}col-12{% else %}col-md-6{% endif %}">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="h5 mb-0">Ubicaciones del cliente</h2>
+                    <div class="text-secondary small">Agrega una o varias referencias de ubicacion con su descripcion.</div>
+                </div>
+                <button class="btn btn-sm btn-outline-primary" type="button" id="agregar-ubicacion">Agregar fila</button>
+            </div>
+
+            {{ formset.management_form }}
+            <div id="ubicaciones-contenedor" class="d-grid gap-3">
+                {% for ubicacion_form in formset %}
+                    <div class="border rounded-4 p-3 ubicacion-item">
+                        {% for hidden in ubicacion_form.hidden_fields %}{{ hidden }}{% endfor %}
+                        <div class="row g-3 align-items-end">
+                            {% for field in ubicacion_form.visible_fields %}
+                                <div class="{% if field.name == 'DELETE' %}col-12{% else %}col-md-6{% endif %}">
+                                    <label class="form-label">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <button class="btn btn-primary mt-4" type="submit">Guardar</button>
+        </form>
+    </div>
+</div>
+
+<template id="ubicacion-empty-form">
+    <div class="border rounded-4 p-3 ubicacion-item">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label" for="id_ubicaciones-__prefix__-enlace">Ubicacion</label>
+                <input type="text" name="ubicaciones-__prefix__-enlace" class="form-control" id="id_ubicaciones-__prefix__-enlace" placeholder="https://maps.google.com/... o referencia">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="id_ubicaciones-__prefix__-descripcion">Descripcion</label>
+                <input type="text" name="ubicaciones-__prefix__-descripcion" class="form-control" id="id_ubicaciones-__prefix__-descripcion" placeholder="Casa, trabajo, entrega, etc.">
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+    const addLocationButton = document.getElementById("agregar-ubicacion");
+    const totalLocationForms = document.getElementById("id_ubicaciones-TOTAL_FORMS");
+    const emptyLocationForm = document.getElementById("ubicacion-empty-form");
+    const locationContainer = document.getElementById("ubicaciones-contenedor");
+
+    if (addLocationButton && totalLocationForms && emptyLocationForm && locationContainer) {
+        addLocationButton.addEventListener("click", () => {
+            const index = Number(totalLocationForms.value);
+            const content = emptyLocationForm.innerHTML.replaceAll("__prefix__", index);
+            locationContainer.insertAdjacentHTML("beforeend", content);
+            totalLocationForms.value = index + 1;
+        });
+    }
+</script>
+{% endblock %}

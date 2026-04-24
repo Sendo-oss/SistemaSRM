@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Inventario{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Inventario por ubicacion</h1>
+        <div class="text-secondary">La mercaderia nueva entra a casa y luego se traslada a local cuando haga falta.</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" href="{% url 'catalogo:crear' %}">Nuevo producto</a>
+        <a class="btn btn-primary" href="{% url 'inventario:crear_movimiento' %}">Registrar movimiento</a>
+    </div>
+</div>
+
+<form class="card soft-card card-body mb-3" method="get">
+    <div class="row g-2">
+        <div class="col-md-10">
+            <input class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar producto o categoria">
+        </div>
+        <div class="col-md-2 d-grid">
+            <button class="btn btn-outline-primary" type="submit">Buscar</button>
+        </div>
+    </div>
+</form>
+
+<div class="card soft-card mb-4">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Categoria</th>
+                    <th>Casa</th>
+                    <th>Local</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos %}
+                    <tr>
+                        <td>{{ producto.nombre }}</td>
+                        <td>{{ producto.categoria }}</td>
+                        <td>{{ producto.stock_casa|default:"0" }}</td>
+                        <td>{{ producto.stock_local|default:"0" }}</td>
+                        <td>{{ producto.stock_disponible }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5">No hay productos cargados aun. Puedes usar productos temporales mientras recibes los datos reales.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card soft-card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0">Movimientos recientes</h2>
+            <a href="{% url 'inventario:movimientos' %}">Ver historial completo</a>
+        </div>
+        <div class="list-group list-group-flush">
+            {% for movimiento in movimientos_recientes %}
+                <div class="list-group-item px-0">
+                    <div class="fw-semibold">{{ movimiento.producto.nombre }}</div>
+                    <div class="text-secondary small">
+                        {{ movimiento.get_tipo_movimiento_display }}
+                        {% if movimiento.ubicacion_origen %} · {{ movimiento.ubicacion_origen }} -> {{ movimiento.ubicacion_destino }}{% else %} · destino {{ movimiento.ubicacion_destino }}{% endif %}
+                        · {{ movimiento.cantidad }}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-secondary">No hay movimientos registrados.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

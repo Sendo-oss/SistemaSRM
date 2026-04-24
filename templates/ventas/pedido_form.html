@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">{% if object %}Editar pedido{% else %}Nuevo pedido{% endif %}</h1>
+    <a href="{% url 'ventas:lista' %}">Volver</a>
+</div>
+
+<form method="post" id="pedido-form">
+    {% csrf_token %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Cabecera del pedido</h2>
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>
+            {% endif %}
+            {% if formset.non_form_errors %}
+                <div class="alert alert-danger py-2">{{ formset.non_form_errors }}</div>
+            {% endif %}
+            <div class="row g-3">
+                {% for field in form %}
+                    <div class="{% if field.name == 'observaciones' %}col-12{% else %}col-md-6{% endif %}">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">Detalle de productos</h2>
+                <button class="btn btn-outline-primary btn-sm" type="button" id="agregar-fila">Agregar producto</button>
+            </div>
+
+            {{ formset.management_form }}
+            <div id="detalle-rows" class="vstack gap-3">
+                {% for detalle_form in formset %}
+                    <div class="border rounded p-3 detalle-row" data-form-index="{{ forloop.counter0 }}">
+                        {% for hidden in detalle_form.hidden_fields %}{{ hidden }}{% endfor %}
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-5">
+                                <label class="form-label">{{ detalle_form.producto.label }}</label>
+                                {{ detalle_form.producto }}
+                                {% if detalle_form.producto.errors %}<div class="text-danger small mt-1">{{ detalle_form.producto.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">{{ detalle_form.cantidad.label }}</label>
+                                {{ detalle_form.cantidad }}
+                                {% if detalle_form.cantidad.errors %}<div class="text-danger small mt-1">{{ detalle_form.cantidad.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">{{ detalle_form.precio_unitario.label }}</label>
+                                {{ detalle_form.precio_unitario }}
+                                {% if detalle_form.precio_unitario.errors %}<div class="text-danger small mt-1">{{ detalle_form.precio_unitario.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Subtotal</label>
+                                <input type="text" class="form-control subtotal-linea" value="0.00" readonly>
+                            </div>
+                            <div class="col-md-1">
+                                {% if detalle_form.DELETE %}
+                                    <div class="form-check mb-2">
+                                        {{ detalle_form.DELETE }}
+                                        <label class="form-check-label small" for="{{ detalle_form.DELETE.id_for_label }}">Quitar</label>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <template id="detalle-empty-form">
+                <div class="border rounded p-3 detalle-row" data-form-index="__prefix__">
+                    __HIDDEN_FIELDS__
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label">Producto</label>
+                            __PRODUCTO__
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Cantidad</label>
+                            __CANTIDAD__
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Precio unitario</label>
+                            __PRECIO__
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Subtotal</label>
+                            <input type="text" class="form-control subtotal-linea" value="0.00" readonly>
+                        </div>
+                        <div class="col-md-1">
+                            <button class="btn btn-outline-danger btn-sm quitar-fila" type="button">X</button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Resumen</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Subtotal</label>
+                    <input type="text" class="form-control" id="resumen-subtotal" value="0.00" readonly>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Descuento estimado</label>
+                    <input type="text" class="form-control" id="resumen-descuento" value="0.00" readonly>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Total estimado</label>
+                    <input type="text" class="form-control" id="resumen-total" value="0.00" readonly>
+                </div>
+            </div>
+            <div class="form-text mt-2">El total definitivo se recalcula también en el servidor al guardar.</div>
+        </div>
+    </div>
+
+    <button class="btn btn-primary" type="submit">Guardar pedido</button>
+</form>
+
+{{ formset.empty_form.producto.as_widget|json_script:"empty-producto-widget" }}
+{{ formset.empty_form.cantidad.as_widget|json_script:"empty-cantidad-widget" }}
+{{ formset.empty_form.precio_unitario.as_widget|json_script:"empty-precio-widget" }}
+{{ formset.empty_form.id.as_widget|default_if_none:""|json_script:"empty-hidden-id" }}
+{{ formset.empty_form.DELETE.as_widget|default_if_none:""|json_script:"empty-delete-widget" }}
+
+{{ productos_json|json_script:"productos-data" }}
+{{ promociones_json|json_script:"promociones-data" }}
+
+<script>
+    const productos = JSON.parse(document.getElementById("productos-data").textContent);
+    const promociones = JSON.parse(document.getElementById("promociones-data").textContent);
+    const totalFormsInput = document.getElementById("id_detalles-TOTAL_FORMS");
+    const detalleRows = document.getElementById("detalle-rows");
+    const addRowButton = document.getElementById("agregar-fila");
+    const subtotalResumen = document.getElementById("resumen-subtotal");
+    const descuentoResumen = document.getElementById("resumen-descuento");
+    const totalResumen = document.getElementById("resumen-total");
+    const promocionSelect = document.getElementById("id_promocion");
+
+    function money(value) {
+        return Number(value || 0).toFixed(2);
+    }
+
+    function getPromotionDiscount(subtotal) {
+        if (!promocionSelect || !promocionSelect.value) return 0;
+        const promocion = promociones.find((item) => String(item.id) === String(promocionSelect.value));
+        if (!promocion) return 0;
+        const porcentaje = Number(promocion.porcentaje_descuento || 0);
+        const fijo = Number(promocion.monto_descuento || 0);
+        return Math.min(subtotal, (subtotal * porcentaje / 100) + fijo);
+    }
+
+    function updateRowSubtotal(row) {
+        const qtyInput = row.querySelector(".cantidad-input");
+        const priceInput = row.querySelector(".precio-input");
+        const subtotalInput = row.querySelector(".subtotal-linea");
+        const deleteInput = row.querySelector("input[type='checkbox'][name$='-DELETE']");
+        if (deleteInput && deleteInput.checked) {
+            subtotalInput.value = money(0);
+            return 0;
+        }
+        const subtotal = (Number(qtyInput?.value || 0) * Number(priceInput?.value || 0));
+        subtotalInput.value = money(subtotal);
+        return subtotal;
+    }
+
+    function recalculateTotals() {
+        let subtotal = 0;
+        document.querySelectorAll(".detalle-row").forEach((row) => {
+            subtotal += updateRowSubtotal(row);
+        });
+        const descuento = getPromotionDiscount(subtotal);
+        subtotalResumen.value = money(subtotal);
+        descuentoResumen.value = money(descuento);
+        totalResumen.value = money(subtotal - descuento);
+    }
+
+    function syncPriceFromProduct(row) {
+        const select = row.querySelector(".producto-select");
+        const priceInput = row.querySelector(".precio-input");
+        const producto = productos.find((item) => String(item.id) === String(select.value));
+        if (producto && (!priceInput.value || Number(priceInput.value) === 0)) {
+            priceInput.value = money(producto.precio);
+        }
+        recalculateTotals();
+    }
+
+    function bindRow(row) {
+        const select = row.querySelector(".producto-select");
+        const qtyInput = row.querySelector(".cantidad-input");
+        const priceInput = row.querySelector(".precio-input");
+        const deleteInput = row.querySelector("input[type='checkbox'][name$='-DELETE']");
+        select?.addEventListener("change", () => syncPriceFromProduct(row));
+        qtyInput?.addEventListener("input", recalculateTotals);
+        priceInput?.addEventListener("input", recalculateTotals);
+        deleteInput?.addEventListener("change", recalculateTotals);
+        row.querySelector(".quitar-fila")?.addEventListener("click", () => {
+            row.remove();
+            recalculateTotals();
+        });
+        syncPriceFromProduct(row);
+    }
+
+    function getEmptyWidget(id) {
+        return JSON.parse(document.getElementById(id).textContent);
+    }
+
+    function addRow() {
+        const index = Number(totalFormsInput.value);
+        const wrapper = document.createElement("div");
+        const productoHtml = getEmptyWidget("empty-producto-widget").replaceAll("__prefix__", index);
+        const cantidadHtml = getEmptyWidget("empty-cantidad-widget").replaceAll("__prefix__", index);
+        const precioHtml = getEmptyWidget("empty-precio-widget").replaceAll("__prefix__", index);
+        const hiddenId = getEmptyWidget("empty-hidden-id").replaceAll("__prefix__", index);
+        const deleteWidget = getEmptyWidget("empty-delete-widget").replaceAll("__prefix__", index);
+        let html = document.getElementById("detalle-empty-form").innerHTML;
+        html = html.replace("__PRODUCTO__", productoHtml);
+        html = html.replace("__CANTIDAD__", cantidadHtml);
+        html = html.replace("__PRECIO__", precioHtml);
+        html = html.replace("__HIDDEN_FIELDS__", hiddenId + deleteWidget);
+        html = html.replaceAll("__prefix__", index);
+        wrapper.innerHTML = html.trim();
+        const row = wrapper.firstElementChild;
+        detalleRows.appendChild(row);
+        totalFormsInput.value = index + 1;
+        bindRow(row);
+        recalculateTotals();
+    }
+
+    addRowButton?.addEventListener("click", addRow);
+    promocionSelect?.addEventListener("change", recalculateTotals);
+    document.querySelectorAll(".detalle-row").forEach(bindRow);
+    recalculateTotals();
+</script>
+{% endblock %}

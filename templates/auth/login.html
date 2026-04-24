@@ -1,0 +1,395 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar sesion{% endblock %}
+
+{% block extra_css %}
+<style>
+    body.auth-page {
+        overflow: hidden;
+        background: linear-gradient(90deg, #ef7e7a 0%, #cb91b3 48%, #78a7de 100%);
+    }
+
+    .auth-shell {
+        padding: 1rem;
+    }
+
+    .auth-frame {
+        width: min(100%, 1120px);
+    }
+
+    .member-login-layout {
+        min-height: calc(100vh - 2rem);
+        display: grid;
+        place-items: center;
+    }
+
+    .member-login-card {
+        width: min(100%, 820px);
+        height: min(560px, calc(100vh - 2rem));
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-radius: 0.9rem;
+        overflow: hidden;
+        box-shadow: 0 22px 55px rgba(56, 68, 96, 0.28);
+        background: #fff;
+    }
+
+    .member-pane {
+        padding: 3.2rem 3.4rem 2.8rem;
+        background: #fbfbfc;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .member-title {
+        margin: 0;
+        color: #f2807d;
+        font-size: clamp(2rem, 2.5vw, 2.75rem);
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        font-family: "Cormorant Garamond", serif;
+        line-height: 0.92;
+    }
+
+    .member-subtitle {
+        color: #b7b7bc;
+        font-size: 1rem;
+        margin: 0.45rem 0 2.35rem;
+    }
+
+    .member-field {
+        position: relative;
+        margin-bottom: 1.15rem;
+    }
+
+    .member-input {
+        width: 100%;
+        height: 48px;
+        border-radius: 999px;
+        border: 1px solid #dad9df;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 0 1.15rem 0 3rem;
+        font-size: 1rem;
+        color: #5f6772;
+        outline: 0;
+        transition: 0.2s ease;
+    }
+
+    .member-input.username {
+        border-color: #ef8f8a;
+        box-shadow: inset 0 0 0 1px rgba(122, 205, 226, 0.9);
+    }
+
+    .member-input:focus {
+        border-color: #8ccfe4;
+        box-shadow: 0 0 0 0.2rem rgba(120, 197, 223, 0.16);
+    }
+
+    .member-icon {
+        position: absolute;
+        left: 1.05rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 1.2rem;
+        height: 1.2rem;
+        color: #f28985;
+        opacity: 0.9;
+    }
+
+    .member-icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    .member-button {
+        width: 100%;
+        max-width: 275px;
+        height: 46px;
+        border: 0;
+        border-radius: 999px;
+        margin-top: 1.55rem;
+        background: linear-gradient(90deg, #f58782 0%, #7ed0df 100%);
+        color: #fff;
+        font-size: 1.05rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        box-shadow: 0 14px 26px rgba(127, 204, 222, 0.3);
+    }
+
+    .member-forgot {
+        margin-top: 1.6rem;
+        text-align: right;
+        font-size: 0.92rem;
+    }
+
+    .member-forgot a {
+        color: #b4b2b6;
+        text-decoration: none;
+        font-style: italic;
+    }
+
+    .member-alert {
+        margin-top: 1rem;
+        border-radius: 0.85rem;
+        font-size: 0.92rem;
+    }
+
+    .signup-pane {
+        position: relative;
+        padding: 2.35rem 2.25rem 2rem;
+        color: #fff;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        overflow: hidden;
+        background:
+            linear-gradient(180deg, rgba(22, 45, 56, 0.55), rgba(15, 24, 35, 0.88)),
+            radial-gradient(circle at 50% 85%, rgba(241, 149, 96, 0.18), transparent 22%),
+            linear-gradient(180deg, #264552 0%, #1b2d37 45%, #121a24 100%);
+    }
+
+    .signup-pane::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.05) 18%, transparent 19%),
+            linear-gradient(180deg, transparent 0%, transparent 62%, rgba(241, 159, 113, 0.1) 88%, rgba(255, 190, 135, 0.14) 100%);
+        pointer-events: none;
+    }
+
+    .signup-pane::after {
+        content: "";
+        position: absolute;
+        left: -8%;
+        right: -8%;
+        bottom: 18%;
+        height: 130px;
+        background:
+            radial-gradient(ellipse at center, rgba(243, 168, 113, 0.18), transparent 58%);
+        pointer-events: none;
+    }
+
+    .signup-title {
+        position: relative;
+        z-index: 1;
+        color: #ff8d87;
+        font-size: clamp(1.85rem, 2.2vw, 2.5rem);
+        font-weight: 700;
+        margin: 0;
+        font-family: "Cormorant Garamond", serif;
+        line-height: 0.95;
+    }
+
+    .signup-copy {
+        position: relative;
+        z-index: 1;
+        margin: 0.55rem 0 0.9rem;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 0.95rem;
+        line-height: 1.55;
+    }
+
+    .welcome-badge {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 0.55rem 1rem;
+        border-radius: 999px;
+        margin: 0 auto 1rem;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 0.9rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .welcome-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin: 0.95rem 0 1.2rem;
+    }
+
+    .welcome-card {
+        position: relative;
+        padding: 0.8rem 0.75rem;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        text-align: left;
+        backdrop-filter: blur(6px);
+    }
+
+    .welcome-card-title {
+        color: #ff9c96;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.28rem;
+    }
+
+    .welcome-card-copy {
+        position: relative;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 0.82rem;
+        line-height: 1.4;
+        margin: 0;
+    }
+
+    .welcome-note {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.88rem;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 991.98px) {
+        .member-login-card {
+            width: min(100%, 520px);
+            height: auto;
+            grid-template-columns: 1fr;
+        }
+
+        .signup-pane {
+            display: none;
+        }
+
+        .member-pane {
+            padding: 2rem 1.5rem;
+        }
+
+        .member-button {
+            max-width: none;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .auth-shell {
+            padding: 0.6rem;
+        }
+
+        .member-login-layout {
+            min-height: calc(100vh - 1.2rem);
+        }
+
+        .member-pane {
+            padding: 1.6rem 1.1rem;
+        }
+
+        .member-title {
+            font-size: 1.95rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="member-login-layout">
+    <div class="member-login-card">
+        <div class="member-pane">
+            <div>
+                <h1 class="member-title">Iniciar sesion</h1>
+                <p class="member-subtitle">Por favor ingresa tus datos de acceso</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                {% if next %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                {% endif %}
+
+                <div class="member-field">
+                    <span class="member-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="8" r="4"></circle>
+                            <path d="M4 20c1.8-4 5-6 8-6s6.2 2 8 6"></path>
+                        </svg>
+                    </span>
+                    <input
+                        class="member-input username"
+                        type="text"
+                        name="username"
+                        id="id_username"
+                        value="{{ form.username.value|default:'' }}"
+                        placeholder="Ingresa tu Usuario"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <div class="member-field">
+                    <span class="member-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="5" y="11" width="14" height="10" rx="2"></rect>
+                            <path d="M8 11V8a4 4 0 0 1 8 0v3"></path>
+                        </svg>
+                    </span>
+                    <input
+                        class="member-input"
+                        type="password"
+                        name="password"
+                        id="id_password"
+                        placeholder="Contrasena"
+                        required
+                    >
+                </div>
+
+                {% if form.errors %}
+                    <div class="alert alert-danger member-alert">Usuario o contrasena incorrectos.</div>
+                {% endif %}
+
+                <button class="member-button" type="submit">INGRESAR</button>
+
+                <div class="member-forgot">
+                    <a href="#" onclick="return false;">Olvidaste tu contrasena?</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="signup-pane">
+            <div class="welcome-badge">Bienvenido</div>
+            <h2 class="signup-title">Control total de tus clientes</h2>
+            <p class="signup-copy">
+                Accede a un espacio pensado para organizar seguimientos, citas, fotos e inventario
+                desde un solo panel de trabajo.
+            </p>
+
+            <div class="welcome-grid">
+                <div class="welcome-card">
+                    <div class="welcome-card-title">Clientes</div>
+                    <p class="welcome-card-copy">Consulta fichas, telefonos, ubicaciones y avances rapidamente.</p>
+                </div>
+                <div class="welcome-card">
+                    <div class="welcome-card-title">Agenda</div>
+                    <p class="welcome-card-copy">Controla citas y seguimientos pendientes sin perder continuidad.</p>
+                </div>
+                <div class="welcome-card">
+                    <div class="welcome-card-title">Fotos</div>
+                    <p class="welcome-card-copy">Ordena el historial visual de cada tratamiento por fecha.</p>
+                </div>
+                <div class="welcome-card">
+                    <div class="welcome-card-title">Inventario</div>
+                    <p class="welcome-card-copy">Supervisa movimientos entre casa y local de forma clara.</p>
+                </div>
+            </div>
+
+            <p class="welcome-note">
+                Ingresa con tu usuario para continuar con la gestion diaria del sistema.
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}

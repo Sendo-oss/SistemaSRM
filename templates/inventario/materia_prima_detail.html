@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">{{ materia_prima.nombre }}</h1>
+    <a class="btn btn-outline-primary" href="{% url 'inventario:editar' materia_prima.pk %}">Editar</a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Código</dt><dd class="col-sm-9">{{ materia_prima.codigo }}</dd>
+            <dt class="col-sm-3">Proveedor</dt><dd class="col-sm-9">{{ materia_prima.proveedor }}</dd>
+            <dt class="col-sm-3">Lote</dt><dd class="col-sm-9">{{ materia_prima.lote }}</dd>
+            <dt class="col-sm-3">Ingreso</dt><dd class="col-sm-9">{{ materia_prima.fecha_ingreso }}</dd>
+            <dt class="col-sm-3">Vencimiento</dt><dd class="col-sm-9">{{ materia_prima.fecha_vencimiento }}</dd>
+            <dt class="col-sm-3">Cantidad</dt><dd class="col-sm-9">{{ materia_prima.cantidad_disponible }} {{ materia_prima.unidad_medida }}</dd>
+            <dt class="col-sm-3">Costo</dt><dd class="col-sm-9">${{ materia_prima.costo }}</dd>
+            <dt class="col-sm-3">Observaciones</dt><dd class="col-sm-9">{{ materia_prima.observaciones|default:"-" }}</dd>
+        </dl>
+    </div>
+</div>
+{% endblock %}
+

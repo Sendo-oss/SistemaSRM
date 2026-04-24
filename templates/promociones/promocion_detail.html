@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}{{ promocion.nombre }}{% endblock %}
+{% block page_heading %}Descuentos{% endblock %}
+{% block page_subheading %}Analisis del descuento y su impacto sobre la rentabilidad del producto.{% endblock %}
+
+{% block content %}
+<div class="module-shell">
+    <section class="module-panel module-header">
+        <div class="module-title-block">
+            <span class="module-kicker">Descuento</span>
+            <h1 class="module-title">{{ promocion.nombre }}</h1>
+            <p class="module-copy">Revisa si el descuento sigue siendo rentable para el producto vinculado.</p>
+        </div>
+        <div class="module-actions">
+            <a class="btn btn-outline-primary" href="{% url 'promociones:lista' %}">Volver</a>
+            <a class="btn btn-primary" href="{% url 'promociones:editar' promocion.pk %}">Editar</a>
+        </div>
+    </section>
+
+    <section class="row g-3">
+        <div class="col-md-6 col-xl-3">
+            <div class="metric-card teal">
+                <div class="metric-label">Precio base</div>
+                <div class="metric-value">{% if promocion.producto %}${{ promocion.producto.precio }}{% else %}-{% endif %}</div>
+                <p class="metric-note">Precio actual del producto relacionado.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="metric-card rose">
+                <div class="metric-label">Precio con descuento</div>
+                <div class="metric-value">{% if promocion.precio_descuento_aplicado is not None %}${{ promocion.precio_descuento_aplicado }}{% else %}-{% endif %}</div>
+                <p class="metric-note">Valor final estimado después del descuento.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="metric-card mint">
+                <div class="metric-label">Precio minimo rentable</div>
+                <div class="metric-value">{% if promocion.producto %}${{ promocion.producto.precio_minimo_rentable }}{% else %}-{% endif %}</div>
+                <p class="metric-note">Límite inferior para mantener el margen mínimo.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="metric-card {% if promocion.es_rentable %}mint{% else %}sun{% endif %}">
+                <div class="metric-label">Resultado</div>
+                <div class="metric-value">
+                    {% if promocion.es_rentable is None %}N/A{% elif promocion.es_rentable %}Si{% else %}No{% endif %}
+                </div>
+                <p class="metric-note">Indica si el descuento sigue siendo rentable.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="soft-card">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Producto</dt><dd class="col-sm-9">{{ promocion.producto|default:"-" }}</dd>
+                <dt class="col-sm-3">Tipo</dt><dd class="col-sm-9">{{ promocion.get_tipo_promocion_display }}</dd>
+                <dt class="col-sm-3">Descuento %</dt><dd class="col-sm-9">{{ promocion.porcentaje_descuento }}%</dd>
+                <dt class="col-sm-3">Monto fijo</dt><dd class="col-sm-9">${{ promocion.monto_descuento }}</dd>
+                <dt class="col-sm-3">Vigencia</dt><dd class="col-sm-9">{{ promocion.fecha_inicio|date:"d/m/Y" }} - {{ promocion.fecha_fin|date:"d/m/Y" }}</dd>
+                <dt class="col-sm-3">Ganancia estimada</dt><dd class="col-sm-9">{% if promocion.ganancia_estimada is not None %}${{ promocion.ganancia_estimada }}{% else %}-{% endif %}</dd>
+                <dt class="col-sm-3">Condicion</dt><dd class="col-sm-9">{{ promocion.condicion_aplicacion|default:"-" }}</dd>
+                <dt class="col-sm-3">Descripcion</dt><dd class="col-sm-9">{{ promocion.descripcion|default:"-" }}</dd>
+            </dl>
+        </div>
+    </div>
+</div>
+{% endblock %}

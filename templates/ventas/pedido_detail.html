@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Pedido #{{ pedido.pk }}</h1>
+    <a class="btn btn-outline-primary" href="{% url 'ventas:editar' pedido.pk %}">Editar</a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Cliente</dt><dd class="col-sm-9">{{ pedido.cliente }}</dd>
+            <dt class="col-sm-3">Promoción</dt><dd class="col-sm-9">{{ pedido.promocion|default:"-" }}</dd>
+            <dt class="col-sm-3">Subtotal</dt><dd class="col-sm-9">${{ pedido.subtotal }}</dd>
+            <dt class="col-sm-3">Descuento</dt><dd class="col-sm-9">${{ pedido.descuento }}</dd>
+            <dt class="col-sm-3">Total</dt><dd class="col-sm-9">${{ pedido.total }}</dd>
+            <dt class="col-sm-3">Pagado</dt><dd class="col-sm-9">${{ pedido.monto_pagado }}</dd>
+            <dt class="col-sm-3">Saldo pendiente</dt><dd class="col-sm-9">${{ pedido.saldo_pendiente }}</dd>
+            <dt class="col-sm-3">Estado</dt><dd class="col-sm-9">{{ pedido.get_estado_display }}</dd>
+            <dt class="col-sm-3">Observaciones</dt><dd class="col-sm-9">{{ pedido.observaciones|default:"-" }}</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-body">
+        <h2 class="h5 mb-3">Detalle de productos</h2>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Producto</th><th>Cantidad</th><th>Precio unitario</th><th>Subtotal</th></tr></thead>
+                <tbody>
+                    {% for detalle in pedido.detalles.all %}
+                        <tr>
+                            <td>{{ detalle.producto.nombre }}</td>
+                            <td>{{ detalle.cantidad }}</td>
+                            <td>${{ detalle.precio_unitario }}</td>
+                            <td>${{ detalle.subtotal }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4">No hay líneas registradas en este pedido.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0">Pagos asociados</h2>
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'pagos:crear' %}?pedido={{ pedido.pk }}">Registrar pago</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Fecha</th><th>Método</th><th>Monto</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                    {% for pago in pedido.pagos.all %}
+                        <tr>
+                            <td>{{ pago.fecha_pago|date:"d/m/Y H:i" }}</td>
+                            <td>{{ pago.get_metodo_pago_display }}</td>
+                            <td>${{ pago.monto }}</td>
+                            <td>{{ pago.get_estado_display }}</td>
+                            <td><a href="{% url 'pagos:detalle' pago.pk %}">Ver</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5">No hay pagos registrados para este pedido.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

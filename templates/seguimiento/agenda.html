@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Agenda{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Agenda de citas</h1>
+        <div class="text-secondary">Calendario mensual de clientes agendados.</div>
+    </div>
+    <a class="btn btn-primary" href="{% url 'seguimiento:crear' %}?tipo=CITA">Nueva cita</a>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a class="btn btn-outline-primary" href="?year={{ mes_anterior.year }}&month={{ mes_anterior.month }}">Mes anterior</a>
+    <h2 class="h4 mb-0 text-capitalize">{{ mes_actual|date:"F Y" }}</h2>
+    <a class="btn btn-outline-primary" href="?year={{ mes_siguiente.year }}&month={{ mes_siguiente.month }}">Mes siguiente</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card soft-card">
+            <div class="card-body">
+                <div class="row row-cols-7 g-2 fw-semibold text-secondary small mb-2">
+                    <div class="col">Lun</div>
+                    <div class="col">Mar</div>
+                    <div class="col">Mie</div>
+                    <div class="col">Jue</div>
+                    <div class="col">Vie</div>
+                    <div class="col">Sab</div>
+                    <div class="col">Dom</div>
+                </div>
+                <div class="d-grid gap-2">
+                    {% for semana in semanas %}
+                        <div class="row row-cols-7 g-2">
+                            {% for dia in semana %}
+                                <div class="col">
+                                    <div class="calendar-day {% if not dia.en_mes %}muted{% endif %}">
+                                        <div class="fw-semibold mb-2">{{ dia.fecha|date:"d" }}</div>
+                                        {% for cita in dia.citas %}
+                                            <a href="{% url 'seguimiento:detalle' cita.pk %}" class="d-block small text-decoration-none mb-2">
+                                                {{ cita.fecha_cita|date:"H:i" }} · {{ cita.cliente.nombre_mostrado|truncatechars:18 }}
+                                            </a>
+                                        {% empty %}
+                                            <div class="small text-secondary">Sin citas</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card soft-card">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Proximas citas</h2>
+                <div class="list-group list-group-flush">
+                    {% for cita in citas_proximas %}
+                        <a href="{% url 'seguimiento:detalle' cita.pk %}" class="list-group-item list-group-item-action px-0">
+                            <div class="fw-semibold">{{ cita.cliente.nombre_mostrado }}</div>
+                            <div class="text-secondary small">{{ cita.fecha_cita|date:"d/m/Y H:i" }}</div>
+                        </a>
+                    {% empty %}
+                        <div class="text-secondary">No hay citas programadas.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
