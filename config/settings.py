@@ -30,6 +30,17 @@ CSRF_TRUSTED_ORIGINS = [
     if origin.strip()
 ]
 
+render_hostname = (os.getenv("RENDER_EXTERNAL_HOSTNAME") or "").strip()
+if render_hostname:
+    ALLOWED_HOSTS.append(render_hostname)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{render_hostname}")
+
+ALLOWED_HOSTS.extend([".onrender.com", "127.0.0.1", "localhost"])
+CSRF_TRUSTED_ORIGINS.extend(["https://*.onrender.com"])
+
+ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS))
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(CSRF_TRUSTED_ORIGINS))
+
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = os.getenv("DJANGO_SECURE_SSL_REDIRECT", str(not DEBUG)) == "True"
 SESSION_COOKIE_SECURE = os.getenv("DJANGO_SESSION_COOKIE_SECURE", str(not DEBUG)) == "True"
