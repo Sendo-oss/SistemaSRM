@@ -3,6 +3,7 @@ __pycache__/
 *.pyo
 
 .env
+.python_packages/
 .venv/
 venv/
 env/
@@ -16,6 +17,8 @@ staticfiles/
 
 .pytest_cache/
 .coverage
+runserver.log
+runserver.err
 
 .idea/
 .vscode/
