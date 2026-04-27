@@ -16,7 +16,7 @@ def load_env_file(path):
             continue
 
         key, value = line.split("=", 1)
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+        os.environ[key.strip()] = value.strip().strip('"').strip("'")
 
 
 load_env_file(BASE_DIR / ".env")
@@ -90,9 +90,28 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+POSTGRES_DB = (os.getenv("POSTGRES_DB") or "").strip()
+POSTGRES_USER = (os.getenv("POSTGRES_USER") or "").strip()
+POSTGRES_PASSWORD = (os.getenv("POSTGRES_PASSWORD") or "").strip()
+POSTGRES_HOST = (os.getenv("POSTGRES_HOST") or "").strip()
+POSTGRES_PORT = (os.getenv("POSTGRES_PORT") or "").strip()
+DATABASE_URL = (os.getenv("DATABASE_URL") or "").strip()
 
-if DATABASE_URL:
+if all([POSTGRES_DB, POSTGRES_USER, POSTGRES_HOST, POSTGRES_PORT]):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": POSTGRES_DB,
+            "USER": POSTGRES_USER,
+            "PASSWORD": POSTGRES_PASSWORD or "",
+            "HOST": POSTGRES_HOST,
+            "PORT": POSTGRES_PORT,
+            "OPTIONS": {
+                "sslmode": "require" if os.getenv("POSTGRES_SSL_REQUIRE", "True") == "True" else "prefer",
+            },
+        }
+    }
+elif DATABASE_URL:
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
@@ -104,11 +123,11 @@ else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("POSTGRES_DB", "sistema_seguimiento"),
-            "USER": os.getenv("POSTGRES_USER", "postgres"),
-            "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
-            "HOST": os.getenv("POSTGRES_HOST", "127.0.0.1"),
-            "PORT": os.getenv("POSTGRES_PORT", "5434"),
+            "NAME": "sistema_seguimiento",
+            "USER": "postgres",
+            "PASSWORD": "",
+            "HOST": "127.0.0.1",
+            "PORT": "5434",
         }
     }
 
