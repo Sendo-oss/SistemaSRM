@@ -365,12 +365,159 @@
             color: #9e4b3f;
         }
 
+        .soft-badge.status-no {
+            background: #e73535;
+            color: #ffffff;
+            border-color: rgba(231, 53, 53, 0.2);
+        }
+
+        .soft-badge.status-juan {
+            background: #3b7edb;
+            color: #ffffff;
+            border-color: rgba(59, 126, 219, 0.2);
+        }
+
+        .soft-badge.status-alex {
+            background: #ffd9d9;
+            color: #ca5454;
+            border-color: rgba(202, 84, 84, 0.16);
+        }
+
+        .soft-badge.status-sms-alex {
+            background: #edd6ff;
+            color: #8e56b7;
+            border-color: rgba(142, 86, 183, 0.16);
+        }
+
+        .soft-badge.status-sms-juan {
+            background: #118459;
+            color: #ffffff;
+            border-color: rgba(17, 132, 89, 0.18);
+        }
+
+        .contact-status-select {
+            width: auto;
+            min-width: 8.5rem;
+            max-width: 12rem;
+            padding: 0.42rem 1.9rem 0.42rem 0.72rem;
+            border-radius: 999px;
+            border: 0;
+            font-size: 0.76rem;
+            font-weight: 800;
+            box-shadow: none;
+        }
+
+        .contact-status-select.status-no,
+        .contact-status-select.status-juan,
+        .contact-status-select.status-sms-juan {
+            color: #ffffff;
+        }
+
+        .contact-status-select.status-no {
+            background-color: #e73535;
+        }
+
+        .contact-status-select.status-juan {
+            background-color: #3b7edb;
+        }
+
+        .contact-status-select.status-alex {
+            background-color: #ffd9d9;
+            color: #ca5454;
+        }
+
+        .contact-status-select.status-sms-alex {
+            background-color: #edd6ff;
+            color: #8e56b7;
+        }
+
+        .contact-status-select.status-sms-juan {
+            background-color: #118459;
+        }
+
+        .whatsapp-row-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 2rem;
+            padding: 0.38rem 0.78rem;
+            border-radius: 999px;
+            background: #1fae66;
+            color: #ffffff;
+            font-size: 0.76rem;
+            font-weight: 800;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .whatsapp-row-btn:hover {
+            color: #ffffff;
+            background: #178a51;
+        }
+
+        .whatsapp-row-btn.disabled {
+            background: #dbe5ea;
+            color: #7b8d9a;
+            pointer-events: none;
+        }
+
+        .photo-upload-panel {
+            height: 100%;
+            border: 1px solid rgba(219, 229, 236, 0.9);
+            border-radius: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.58);
+        }
+
         .card-note {
             border: 1px dashed rgba(242, 134, 132, 0.24);
             background: linear-gradient(180deg, rgba(255, 245, 245, 0.88), rgba(242, 249, 252, 0.82));
             border-radius: 1rem;
             padding: 1rem 1.1rem;
             color: #335468;
+        }
+
+        .client-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+
+        .client-summary-item {
+            min-height: 4.2rem;
+            border: 1px solid rgba(219, 229, 236, 0.9);
+            border-radius: 1rem;
+            padding: 0.85rem 0.95rem;
+            background: rgba(255, 255, 255, 0.68);
+        }
+
+        .client-summary-label {
+            color: var(--text-soft);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .client-summary-value {
+            margin-top: 0.25rem;
+            color: #17364b;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .compra-meta {
+            border-radius: 0.85rem;
+            padding: 0.62rem 0.75rem;
+            background: linear-gradient(135deg, rgba(242,134,132,0.08), rgba(125,207,223,0.10));
+            color: #466274;
+            font-weight: 700;
+        }
+
+        .draft-status {
+            color: var(--text-soft);
+            font-size: 0.84rem;
+            font-weight: 700;
         }
 
         .soft-card .card-body {
@@ -584,6 +731,7 @@
         }
 
         @media (max-width: 1199.98px) { .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 1199.98px) { .client-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
         @media (max-width: 991.98px) {
             .dashboard-shell { flex-direction: column; }
             .dashboard-sidebar { width: 100%; height: auto; position: relative; overflow: visible; padding: 1rem 0.9rem; gap: 0.9rem; border-right: 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
@@ -599,6 +747,7 @@
         }
         @media (max-width: 767.98px) {
             .quick-grid { grid-template-columns: 1fr; }
+            .client-summary-grid { grid-template-columns: 1fr; }
             .hero-panel { padding: 1.35rem; }
             .dashboard-sidebar { padding: 0.85rem 0.75rem; }
             .sidebar-brand small { font-size: 0.65rem; }
@@ -687,8 +836,8 @@
                             <p>{% block page_subheading %}Gestion diaria de clientes, agenda, imagenes e inventario.{% endblock %}</p>
                         </div>
                         <div class="d-flex gap-2 flex-wrap topbar-actions">
-                            <a class="btn btn-outline-primary btn-sm" href="{% url 'seguimiento:crear' %}?tipo=CITA">Nueva cita</a>
-                            <a class="btn btn-primary btn-sm" href="{% url 'seguimiento:crear' %}?tipo=ENVIO_FOTOS">Nuevo envio</a>
+                            <a class="btn btn-outline-primary btn-sm" href="{% url 'clientes:crear' %}?tipo=CITA">Nueva cita</a>
+                            <a class="btn btn-primary btn-sm" href="{% url 'clientes:crear' %}?tipo=ENVIO_FOTOS">Nuevo envio</a>
                         </div>
                     </div>
     {% else %}

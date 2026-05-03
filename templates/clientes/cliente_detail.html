@@ -4,45 +4,99 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h1 class="h3 mb-0">{{ cliente.nombre_mostrado }}</h1>
-        <div class="text-secondary">Ficha general del cliente y su seguimiento</div>
+        <div class="text-secondary">Registrado el {{ cliente.fecha_registro|date:"l d \d\e F \d\e Y" }} a las {{ cliente.fecha_registro|date:"H:i" }}</div>
     </div>
-    <div class="d-flex gap-2">
-        <a class="btn btn-outline-primary" href="{% url 'clientes:editar' cliente.pk %}">Editar</a>
-        <a class="btn btn-primary" href="{% url 'seguimiento:crear' %}?cliente={{ cliente.pk }}&tipo=CITA">Agendar cita</a>
-        <a class="btn btn-dark" href="{% url 'seguimiento:crear' %}?cliente={{ cliente.pk }}&tipo=ENVIO_FOTOS">Enviar fotos</a>
+    <div class="d-flex gap-2 flex-wrap">
+        {% if cliente.whatsapp_url %}
+            <a class="btn btn-success" href="{{ cliente.whatsapp_url }}" target="_blank" rel="noopener">WhatsApp</a>
+        {% endif %}
+        <button class="btn btn-outline-primary" type="submit" form="cliente-ficha-form" name="guardar_y_volver" value="1">Guardar y volver</button>
+        <button class="btn btn-primary" type="submit" form="cliente-ficha-form">Guardar ficha</button>
     </div>
 </div>
 
+<div class="card soft-card mb-4">
+    <div class="card-body">
+        <div class="client-summary-grid">
+            <div class="client-summary-item">
+                <div class="client-summary-label">Telefono</div>
+                <div class="client-summary-value">{{ cliente.telefono|default:"-" }}</div>
+            </div>
+            <div class="client-summary-item">
+                <div class="client-summary-label">Contacto</div>
+                <div class="client-summary-value">{{ cliente.get_estado_contacto_display }}</div>
+            </div>
+            <div class="client-summary-item">
+                <div class="client-summary-label">Comprado</div>
+                <div class="client-summary-value">${{ total_comprado|floatformat:2 }}</div>
+            </div>
+            <div class="client-summary-item">
+                <div class="client-summary-label">Ultima observacion</div>
+                <div class="client-summary-value">
+                    {% if ultima_observacion %}{{ ultima_observacion.texto|truncatechars:54 }}{% else %}-{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="cliente-ficha-form">
+    {% csrf_token %}
 <div class="row g-4">
     <div class="col-lg-5">
         <div class="card soft-card">
             <div class="card-body">
-                <h2 class="h5 mb-3">Datos del cliente</h2>
-                <dl class="row mb-0">
-                    <dt class="col-sm-4">Nombre</dt><dd class="col-sm-8">{{ cliente.nombre_completo|default:"-" }}</dd>
-                    <dt class="col-sm-4">Identificacion</dt><dd class="col-sm-8">{{ cliente.identificacion|default:"-" }}</dd>
-                    <dt class="col-sm-4">Telefono</dt><dd class="col-sm-8">{{ cliente.telefono|default:"-" }}</dd>
-                    <dt class="col-sm-4">Direccion</dt><dd class="col-sm-8">{{ cliente.direccion|default:"-" }}</dd>
-                    <dt class="col-sm-4">Nacimiento</dt><dd class="col-sm-8">{{ cliente.fecha_nacimiento|date:"d/m/Y"|default:"-" }}</dd>
-                    <dt class="col-sm-4">Observaciones</dt><dd class="col-sm-8">{{ cliente.observaciones|default:"-" }}</dd>
-                </dl>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Datos del cliente</h2>
+                    <button class="btn btn-sm btn-primary" type="submit" form="cliente-ficha-form">Guardar</button>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">{{ form.nombre_completo.label }}</label>
+                        {{ form.nombre_completo }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.telefono.label }}</label>
+                        {{ form.telefono }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.estado_contacto.label }}</label>
+                        {{ form.estado_contacto }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">{{ form.direccion.label }}</label>
+                        {{ form.direccion }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.estado.label }}</label>
+                        {{ form.estado }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Inicio</label>
+                        <input class="form-control" value="{{ cliente.fecha_registro|date:"l d \d\e F \d\e Y H:i" }}" readonly>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="card soft-card mt-4">
             <div class="card-body">
-                <h2 class="h5 mb-3">Ubicaciones registradas</h2>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Observaciones</h2>
+                    <button class="btn btn-sm btn-primary" type="submit" form="cliente-ficha-form">Guardar</button>
+                </div>
+                <div class="photo-upload-panel mb-3">
+                    <label class="form-label">{{ observacion_form.texto.label }}</label>
+                    <textarea class="form-control" name="nueva_observacion" rows="2" placeholder="Escribe una nueva observacion"></textarea>
+                </div>
                 <div class="list-group list-group-flush">
-                    {% for ubicacion in ubicaciones %}
+                    {% for observacion in observaciones_historial %}
                         <div class="list-group-item px-0">
-                            <div class="fw-semibold">{{ ubicacion.descripcion|default:"Ubicacion sin descripcion" }}</div>
-                            <div class="text-secondary small mb-2">{{ ubicacion.enlace|default:"-" }}</div>
-                            {% if ubicacion.es_enlace %}
-                                <a class="btn btn-sm btn-outline-primary" href="{{ ubicacion.enlace }}" target="_blank">Abrir ubicacion</a>
-                            {% endif %}
+                            <div class="text-secondary small">{{ observacion.fecha_registro|date:"l d \d\e F \d\e Y H:i" }}</div>
+                            <div>{{ observacion.texto }}</div>
                         </div>
                     {% empty %}
-                        <div class="text-secondary">Aun no se registraron ubicaciones para este cliente.</div>
+                        <div class="text-secondary">Aun no hay observaciones registradas.</div>
                     {% endfor %}
                 </div>
             </div>
@@ -52,7 +106,31 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2 class="h5 mb-0">Seguimientos pendientes</h2>
-                    <a href="{% url 'seguimiento:lista' %}?q={{ cliente.telefono|default:cliente.nombre_mostrado }}">Ver mas</a>
+                    <button class="btn btn-sm btn-primary" type="submit" form="cliente-ficha-form">Guardar</button>
+                </div>
+                <div class="photo-upload-panel mb-3">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">{{ gestion_form.tipo_interaccion.label }}</label>
+                            {{ gestion_form.tipo_interaccion }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">{{ gestion_form.asunto.label }}</label>
+                            {{ gestion_form.asunto }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ gestion_form.estado.label }}</label>
+                            {{ gestion_form.estado }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ gestion_form.fecha_cita.label }}</label>
+                            {{ gestion_form.fecha_cita }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">{{ gestion_form.observacion.label }}</label>
+                            {{ gestion_form.observacion }}
+                        </div>
+                    </div>
                 </div>
                 <div class="list-group list-group-flush">
                     {% for seguimiento in seguimientos_pendientes %}
@@ -73,25 +151,83 @@
     <div class="col-lg-7">
         <div class="card soft-card mb-4">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h5 mb-0">Fotos enviadas</h2>
-                    <a href="{% url 'seguimiento:fotos' %}?cliente={{ cliente.pk }}">Abrir apartado de imagenes</a>
+                <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">
+                    <div>
+                        <h2 class="h5 mb-0">Fotos pendientes</h2>
+                        <div class="text-secondary small">Control rapido cuando el cliente todavia debe enviar imagenes.</div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <div class="form-check form-switch mb-0">
+                            {{ gestion_form.fotos_pendientes }}
+                            <label class="form-check-label" for="{{ gestion_form.fotos_pendientes.id_for_label }}">Marcar pendiente</label>
+                        </div>
+                        <button class="btn btn-sm btn-primary" type="submit" form="cliente-ficha-form">Guardar</button>
+                    </div>
                 </div>
-                <form class="row g-2 mb-3" method="get">
-                    <div class="col-sm-8">
-                        <input class="form-control" type="date" name="fecha" value="{{ filtro_fecha_foto }}">
+                <div class="list-group list-group-flush">
+                    {% for seguimiento in fotos_pendientes %}
+                        <a href="{% url 'seguimiento:detalle' seguimiento.pk %}" class="list-group-item list-group-item-action px-0">
+                            <div class="fw-semibold">{{ seguimiento.asunto|default:"Fotos pendientes" }}</div>
+                            <div class="text-secondary small">{{ seguimiento.fecha_referencia|date:"d/m/Y H:i" }}</div>
+                        </a>
+                    {% empty %}
+                        <div class="text-secondary">No hay fotos marcadas como pendientes.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card soft-card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Fotos registradas</h2>
+                    <button class="btn btn-sm btn-primary" type="submit" form="cliente-ficha-form">Guardar</button>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="photo-upload-panel">
+                            <div class="fw-bold mb-2">Agregar recibidas</div>
+                            {{ fotos_recibidas_formset.management_form }}
+                            {% for foto_form in fotos_recibidas_formset %}
+                                <div class="row g-2">
+                                    {% for hidden in foto_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                    <div class="col-12">{{ foto_form.archivo }}</div>
+                                    <div class="col-12">{{ foto_form.descripcion }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
                     </div>
-                    <div class="col-sm-4 d-grid">
-                        <button class="btn btn-outline-primary" type="submit">Filtrar por fecha</button>
+                    <div class="col-md-6">
+                        <div class="photo-upload-panel">
+                            <div class="fw-bold mb-2">Agregar enviadas</div>
+                            {{ fotos_enviadas_formset.management_form }}
+                            {% for foto_form in fotos_enviadas_formset %}
+                                <div class="row g-2">
+                                    {% for hidden in foto_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                    <input type="hidden" name="{{ foto_form.enviado_al_cliente.html_name }}" value="on">
+                                    <div class="col-12">{{ foto_form.archivo }}</div>
+                                    <div class="col-12">{{ foto_form.descripcion }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
                     </div>
-                </form>
+                </div>
                 <div class="row g-3">
                     {% for foto in fotos %}
                         <div class="col-md-6">
                             <div class="border rounded p-3 h-100">
-                                <div class="fw-semibold">{{ foto.descripcion|default:"Imagen enviada" }}</div>
-                                <div class="text-secondary small mb-2">{{ foto.fecha_envio|date:"d/m/Y H:i" }}</div>
+                                <div class="fw-semibold">{{ foto.descripcion|default:"Imagen registrada" }}</div>
+                                <div class="mb-2">
+                                    <span class="soft-badge {% if foto.enviado_al_cliente %}status-juan{% else %}status-sms-juan{% endif %}">
+                                        {% if foto.enviado_al_cliente %}Enviada al cliente{% else %}Recibida del cliente{% endif %}
+                                    </span>
+                                </div>
+                                <div class="text-secondary small mb-2">{{ foto.fecha_envio|date:"l d \d\e F \d\e Y H:i" }}</div>
                                 <a class="btn btn-sm btn-outline-dark" href="{{ foto.archivo.url }}" target="_blank">Abrir archivo</a>
+                                <label class="form-check mt-2 mb-0">
+                                    <input class="form-check-input" type="checkbox" name="eliminar_fotos" value="{{ foto.pk }}">
+                                    <span class="form-check-label small">Eliminar al guardar</span>
+                                </label>
                             </div>
                         </div>
                     {% empty %}
@@ -121,6 +257,108 @@
                 </div>
             </div>
         </div>
+
+        <div class="card soft-card mt-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Compras del tratamiento</h2>
+                    <button class="btn btn-sm btn-primary" type="submit" form="cliente-ficha-form">Guardar</button>
+                </div>
+                {{ compras_formset.management_form }}
+                {% if compras_formset.non_form_errors %}
+                    <div class="alert alert-danger py-2">{{ compras_formset.non_form_errors }}</div>
+                {% endif %}
+                <div class="photo-upload-panel mb-3">
+                    {% for compra_form in compras_formset %}
+                        <div class="row g-2 align-items-end compra-row">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ compra_form.producto.label }}</label>
+                                {{ compra_form.producto }}
+                                {% if compra_form.producto.errors %}<div class="text-danger small mt-1">{{ compra_form.producto.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">{{ compra_form.cantidad.label }}</label>
+                                {{ compra_form.cantidad }}
+                                {% if compra_form.cantidad.errors %}<div class="text-danger small mt-1">{{ compra_form.cantidad.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">{{ compra_form.estado.label }}</label>
+                                {{ compra_form.estado }}
+                                {% if compra_form.estado.errors %}<div class="text-danger small mt-1">{{ compra_form.estado.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-12">
+                                <div class="compra-meta compra-resumen">Precio, stock y total apareceran al elegir producto.</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Producto</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th>Eliminar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pedido in pedidos_tratamiento %}
+                                <tr>
+                                    <td>{{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% for detalle in pedido.detalles.all %}
+                                            <div>{{ detalle.producto.nombre }} x {{ detalle.cantidad }}</div>
+                                        {% endfor %}
+                                        {% if pedido.observaciones %}<div class="text-secondary small">{{ pedido.observaciones }}</div>{% endif %}
+                                    </td>
+                                    <td>${{ pedido.total|floatformat:2 }}</td>
+                                    <td>{{ pedido.get_estado_display }}</td>
+                                    <td>
+                                        <input class="form-check-input" type="checkbox" name="eliminar_pedidos" value="{{ pedido.pk }}">
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-secondary">Aun no hay compras registradas.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+</form>
+{{ productos_json|json_script:"productos-compra-data" }}
+<script>
+    const productosCompra = JSON.parse(document.getElementById("productos-compra-data").textContent);
+    const money = (value) => Number(value || 0).toFixed(2);
+    const findProducto = (id) => productosCompra.find((producto) => String(producto.id) === String(id));
+
+    document.querySelectorAll(".compra-row").forEach((row) => {
+        const select = row.querySelector(".compra-producto");
+        const cantidad = row.querySelector(".compra-cantidad");
+        const resumen = row.querySelector(".compra-resumen");
+        const actualizarResumen = () => {
+            if (!resumen) return;
+            const producto = findProducto(select?.value);
+            const cantidadValor = Number(cantidad?.value || 0);
+            if (!producto) {
+                resumen.textContent = "Precio, stock y total apareceran al elegir producto.";
+                return;
+            }
+            const total = Number(producto.precio || 0) * cantidadValor;
+            resumen.textContent = `Precio $${money(producto.precio)} · Stock ${producto.stock_disponible} · Total $${money(total)}`;
+        };
+        select?.addEventListener("change", () => {
+            if (select.value && !cantidad.value) cantidad.value = 1;
+            actualizarResumen();
+        });
+        cantidad?.addEventListener("input", actualizarResumen);
+        actualizarResumen();
+    });
+</script>
 {% endblock %}

@@ -20,13 +20,27 @@
             <div class="card-body">
                 <dl class="row mb-0">
                     <dt class="col-sm-5">Estado</dt><dd class="col-sm-7">{{ seguimiento.get_estado_display }}</dd>
-                    <dt class="col-sm-5">Fecha de contacto</dt><dd class="col-sm-7">{{ seguimiento.fecha_interaccion|date:"d/m/Y H:i" }}</dd>
-                    <dt class="col-sm-5">Fecha de cita</dt><dd class="col-sm-7">{{ seguimiento.fecha_cita|date:"d/m/Y H:i"|default:"-" }}</dd>
+                    <dt class="col-sm-5">Fecha de contacto</dt><dd class="col-sm-7">{{ seguimiento.fecha_interaccion|date:"l d \d\e F \d\e Y H:i" }}</dd>
+                    <dt class="col-sm-5">Fecha de cita</dt><dd class="col-sm-7">{{ seguimiento.fecha_cita|date:"l d \d\e F \d\e Y H:i"|default:"-" }}</dd>
                     <dt class="col-sm-5">Proximo contacto</dt><dd class="col-sm-7">{{ seguimiento.proximo_contacto|date:"d/m/Y H:i"|default:"-" }}</dd>
                     <dt class="col-sm-5">Tratamiento aceptado</dt><dd class="col-sm-7">{% if seguimiento.tratamiento_aceptado %}Si{% else %}No{% endif %}</dd>
                     <dt class="col-sm-5">Carpeta creada</dt><dd class="col-sm-7">{{ seguimiento.carpeta_tratamiento|default:"-" }}</dd>
                     <dt class="col-sm-5">Observacion</dt><dd class="col-sm-7">{{ seguimiento.observacion|default:"-" }}</dd>
                 </dl>
+            </div>
+        </div>
+
+        <div class="card soft-card mt-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Observacion de la ficha</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="observacion">
+                    <label class="form-label" for="{{ observacion_form.observacion.id_for_label }}">{{ observacion_form.observacion.label }}</label>
+                    {{ observacion_form.observacion }}
+                    {% if observacion_form.observacion.errors %}<div class="text-danger small mt-1">{{ observacion_form.observacion.errors }}</div>{% endif %}
+                    <button class="btn btn-primary mt-3" type="submit">Guardar observacion</button>
+                </form>
             </div>
         </div>
     </div>
@@ -38,12 +52,35 @@
                     <h2 class="h5 mb-0">Archivos enviados</h2>
                     <a href="{% url 'seguimiento:fotos' %}?cliente={{ seguimiento.cliente.pk }}">Filtrar imagenes del cliente</a>
                 </div>
+                <form class="photo-upload-panel mb-4" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="foto">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ foto_form.archivos.id_for_label }}">{{ foto_form.archivos.label }}</label>
+                            {{ foto_form.archivos }}
+                            {% if foto_form.archivos.errors %}<div class="text-danger small mt-1">{{ foto_form.archivos.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="{{ foto_form.descripcion.id_for_label }}">{{ foto_form.descripcion.label }}</label>
+                            {{ foto_form.descripcion }}
+                            {% if foto_form.descripcion.errors %}<div class="text-danger small mt-1">{{ foto_form.descripcion.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-check mb-2">
+                                {{ foto_form.enviado_al_cliente }}
+                                <label class="form-check-label small" for="{{ foto_form.enviado_al_cliente.id_for_label }}">{{ foto_form.enviado_al_cliente.label }}</label>
+                            </div>
+                            <button class="btn btn-primary btn-sm w-100" type="submit">Agregar</button>
+                        </div>
+                    </div>
+                </form>
                 <div class="row g-3">
                     {% for foto in seguimiento.fotos.all %}
                         <div class="col-md-6">
                             <div class="border rounded p-3 h-100">
-                                <div class="fw-semibold">{{ foto.descripcion|default:"Imagen enviada" }}</div>
-                                <div class="text-secondary small mb-2">{{ foto.fecha_envio|date:"d/m/Y H:i" }}</div>
+                                <div class="fw-semibold">{{ foto.descripcion|default:"Imagen recibida" }}</div>
+                                <div class="text-secondary small mb-2">{{ foto.fecha_envio|date:"l d \d\e F \d\e Y H:i" }}</div>
                                 <a class="btn btn-sm btn-outline-dark" href="{{ foto.archivo.url }}" target="_blank">Abrir archivo</a>
                             </div>
                         </div>
@@ -53,6 +90,118 @@
                 </div>
             </div>
         </div>
+
+        <div class="card soft-card mt-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Historial de compras del tratamiento</h2>
+                <form method="post" class="photo-upload-panel mb-4" id="compra-tratamiento-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="compra">
+                    {% if compra_form.non_field_errors %}
+                        <div class="alert alert-danger py-2">{{ compra_form.non_field_errors }}</div>
+                    {% endif %}
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label" for="{{ compra_form.producto.id_for_label }}">{{ compra_form.producto.label }}</label>
+                            {{ compra_form.producto }}
+                            {% if compra_form.producto.errors %}<div class="text-danger small mt-1">{{ compra_form.producto.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="{{ compra_form.cantidad.id_for_label }}">{{ compra_form.cantidad.label }}</label>
+                            {{ compra_form.cantidad }}
+                            {% if compra_form.cantidad.errors %}<div class="text-danger small mt-1">{{ compra_form.cantidad.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="{{ compra_form.precio_unitario.id_for_label }}">{{ compra_form.precio_unitario.label }}</label>
+                            {{ compra_form.precio_unitario }}
+                            {% if compra_form.precio_unitario.errors %}<div class="text-danger small mt-1">{{ compra_form.precio_unitario.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="{{ compra_form.estado.id_for_label }}">{{ compra_form.estado.label }}</label>
+                            {{ compra_form.estado }}
+                            {% if compra_form.estado.errors %}<div class="text-danger small mt-1">{{ compra_form.estado.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-9">
+                            <label class="form-label" for="{{ compra_form.observaciones.id_for_label }}">{{ compra_form.observaciones.label }}</label>
+                            {{ compra_form.observaciones }}
+                            {% if compra_form.observaciones.errors %}<div class="text-danger small mt-1">{{ compra_form.observaciones.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Total estimado</label>
+                            <input class="form-control" id="compra-total-estimado" value="0.00" readonly>
+                            <button class="btn btn-primary w-100 mt-2" type="submit">Registrar compra</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Producto</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pedido in pedidos_tratamiento %}
+                                <tr>
+                                    <td>{{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% for detalle in pedido.detalles.all %}
+                                            <div>{{ detalle.producto.nombre }} x {{ detalle.cantidad }}</div>
+                                        {% endfor %}
+                                        {% if pedido.observaciones %}<div class="text-secondary small">{{ pedido.observaciones }}</div>{% endif %}
+                                    </td>
+                                    <td>${{ pedido.total|floatformat:2 }}</td>
+                                    <td>{{ pedido.get_estado_display }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-secondary">Aun no hay compras registradas para este cliente.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+{{ productos_json|json_script:"productos-compra-data" }}
+<script>
+    const productosCompra = JSON.parse(document.getElementById("productos-compra-data").textContent);
+    const productoCompraSelect = document.getElementById("id_producto");
+    const cantidadCompraInput = document.getElementById("id_cantidad");
+    const precioCompraInput = document.getElementById("id_precio_unitario");
+    const totalCompraInput = document.getElementById("compra-total-estimado");
+
+    function money(value) {
+        return Number(value || 0).toFixed(2);
+    }
+
+    function productoSeleccionado() {
+        return productosCompra.find((producto) => String(producto.id) === String(productoCompraSelect?.value));
+    }
+
+    function actualizarPrecioCompra() {
+        const producto = productoSeleccionado();
+        if (producto && (!precioCompraInput.value || Number(precioCompraInput.value) === 0)) {
+            precioCompraInput.value = money(producto.precio);
+        }
+        actualizarTotalCompra();
+    }
+
+    function actualizarTotalCompra() {
+        const cantidad = Number(cantidadCompraInput?.value || 0);
+        const precio = Number(precioCompraInput?.value || 0);
+        totalCompraInput.value = money(cantidad * precio);
+    }
+
+    productoCompraSelect?.addEventListener("change", actualizarPrecioCompra);
+    cantidadCompraInput?.addEventListener("input", actualizarTotalCompra);
+    precioCompraInput?.addEventListener("input", actualizarTotalCompra);
+    actualizarPrecioCompra();
+</script>
 {% endblock %}

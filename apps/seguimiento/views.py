@@ -1,8 +1,11 @@
 import calendar
 from collections import defaultdict
 from datetime import date
+from urllib.parse import urlencode
 
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
@@ -12,9 +15,17 @@ from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 
 from apps.clientes.models import Cliente
+from apps.catalogo.models import Producto
 from apps.usuarios.mixins import SoloPersonalMixin
+from apps.ventas.models import DetallePedido, Pedido
 
-from .forms import FotoSeguimientoFormSet, SeguimientoClienteForm
+from .forms import (
+    CompraTratamientoForm,
+    FotoSeguimientoFormSet,
+    SeguimientoClienteForm,
+    SeguimientoFotoRapidaForm,
+    SeguimientoObservacionForm,
+)
 from .models import FotoSeguimiento, SeguimientoCliente
 
 
@@ -29,6 +40,7 @@ class SeguimientoListView(LoginRequiredMixin, SoloPersonalMixin, ListView):
         q = self.request.GET.get("q")
         estado = self.request.GET.get("estado")
         tipo = self.request.GET.get("tipo")
+        tratamiento = self.request.GET.get("tratamiento")
 
         if q:
             queryset = queryset.filter(
@@ -44,6 +56,10 @@ class SeguimientoListView(LoginRequiredMixin, SoloPersonalMixin, ListView):
             queryset = queryset.filter(estado=estado)
         if tipo:
             queryset = queryset.filter(tipo_interaccion=tipo)
+        if tratamiento == "si":
+            queryset = queryset.filter(tratamiento_aceptado=True)
+        elif tratamiento == "no":
+            queryset = queryset.filter(tratamiento_aceptado=False)
 
         return queryset
 
@@ -58,6 +74,119 @@ class SeguimientoDetailView(LoginRequiredMixin, SoloPersonalMixin, DetailView):
     model = SeguimientoCliente
     template_name = "seguimiento/seguimiento_detail.html"
     context_object_name = "seguimiento"
+
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .select_related("cliente", "usuario")
+            .prefetch_related("fotos", "cliente__pedidos__detalles__producto")
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        action = request.POST.get("action")
+
+        if action == "observacion":
+            return self.guardar_observacion(request)
+        if action == "foto":
+            return self.guardar_fotos(request)
+        if action == "compra":
+            return self.guardar_compra(request)
+
+        messages.error(request, "No se reconocio la accion solicitada.")
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse("seguimiento:detalle", args=[self.object.pk])
+
+    def guardar_observacion(self, request):
+        form = SeguimientoObservacionForm(request.POST, instance=self.object)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Observacion guardada.")
+            return HttpResponseRedirect(self.get_success_url())
+
+        return self.render_to_response(self.get_context_data(observacion_form=form))
+
+    def guardar_fotos(self, request):
+        form = SeguimientoFotoRapidaForm(request.POST, request.FILES)
+        if form.is_valid():
+            archivos = form.cleaned_data["archivos"]
+            descripcion = form.cleaned_data["descripcion"]
+            enviado_al_cliente = form.cleaned_data["enviado_al_cliente"]
+            for archivo in archivos:
+                FotoSeguimiento.objects.create(
+                    seguimiento=self.object,
+                    cliente=self.object.cliente,
+                    archivo=archivo,
+                    descripcion=descripcion,
+                    enviado_al_cliente=enviado_al_cliente,
+                )
+            messages.success(request, "Fotos agregadas al seguimiento.")
+            return HttpResponseRedirect(self.get_success_url())
+
+        return self.render_to_response(self.get_context_data(foto_form=form))
+
+    def guardar_compra(self, request):
+        form = CompraTratamientoForm(request.POST)
+        if form.is_valid():
+            producto = form.cleaned_data["producto"]
+            cantidad = form.cleaned_data["cantidad"]
+            estado = form.cleaned_data["estado"]
+            precio_unitario = form.cleaned_data["precio_unitario"]
+            observaciones = form.cleaned_data["observaciones"]
+
+            if estado != Pedido.Estado.CANCELADO and cantidad > producto.stock_disponible:
+                form.add_error("cantidad", f"Stock insuficiente. Disponible: {producto.stock_disponible}.")
+                return self.render_to_response(self.get_context_data(compra_form=form))
+
+            with transaction.atomic():
+                producto = Producto.objects.select_for_update().get(pk=producto.pk)
+                if estado != Pedido.Estado.CANCELADO and cantidad > producto.stock_disponible:
+                    form.add_error("cantidad", f"Stock insuficiente. Disponible: {producto.stock_disponible}.")
+                    return self.render_to_response(self.get_context_data(compra_form=form))
+
+                pedido = Pedido.objects.create(
+                    cliente=self.object.cliente,
+                    usuario=request.user,
+                    estado=estado,
+                    observaciones=observaciones,
+                    subtotal=0,
+                    descuento=0,
+                    total=0,
+                )
+                DetallePedido.objects.create(
+                    pedido=pedido,
+                    producto=producto,
+                    cantidad=cantidad,
+                    precio_unitario=precio_unitario,
+                    subtotal=0,
+                )
+                pedido.recalcular_totales()
+                if estado != Pedido.Estado.CANCELADO:
+                    producto.stock_disponible = producto.stock_disponible - cantidad
+                    producto.save(update_fields=["stock_disponible"])
+
+            messages.success(request, "Compra registrada en el historial del cliente.")
+            return HttpResponseRedirect(self.get_success_url())
+
+        return self.render_to_response(self.get_context_data(compra_form=form))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.setdefault("observacion_form", SeguimientoObservacionForm(instance=self.object))
+        context.setdefault("foto_form", SeguimientoFotoRapidaForm())
+        context.setdefault("compra_form", CompraTratamientoForm())
+        context["pedidos_tratamiento"] = (
+            self.object.cliente.pedidos.select_related("promocion", "usuario")
+            .prefetch_related("detalles__producto")
+            .order_by("-fecha_pedido")[:10]
+        )
+        context["productos_json"] = list(
+            Producto.objects.filter(estado=Producto.Estado.ACTIVO).values("id", "nombre", "precio", "stock_disponible")
+        )
+        return context
 
 
 class SeguimientoManageView(LoginRequiredMixin, SoloPersonalMixin, View):
@@ -138,7 +267,21 @@ class SeguimientoManageView(LoginRequiredMixin, SoloPersonalMixin, View):
 
 
 class SeguimientoCreateView(SeguimientoManageView):
-    pass
+    def get(self, request, *args, **kwargs):
+        cliente_id = request.GET.get("cliente")
+        tipo = request.GET.get("tipo")
+        query = {}
+        if tipo:
+            query["tipo"] = tipo
+
+        if cliente_id:
+            destino = reverse("clientes:editar", args=[cliente_id])
+        else:
+            destino = reverse("clientes:crear")
+
+        if query:
+            destino = f"{destino}?{urlencode(query)}"
+        return HttpResponseRedirect(destino)
 
 
 class SeguimientoUpdateView(SeguimientoManageView):

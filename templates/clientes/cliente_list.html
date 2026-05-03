@@ -8,20 +8,113 @@
         <div class="module-title-block">
             <span class="module-kicker">Clientes</span>
             <h1 class="module-title">Directorio de clientes</h1>
-            <p class="module-copy">Encuentra rápidamente clientes por nombre, teléfono, ubicación, dirección o identificación y entra a su ficha completa.</p>
+            <p class="module-copy">Encuentra rapidamente clientes por nombre, telefono, estado de contacto o direccion y entra a su ficha completa.</p>
         </div>
         <div class="module-actions">
-            <a class="btn btn-primary" href="{% url 'clientes:crear' %}">Nuevo cliente</a>
+            <button class="btn btn-outline-primary" type="button" id="mostrar-cliente-rapido">Cliente rapido</button>
+            <a class="btn btn-primary" href="{% url 'clientes:crear' %}">Nuevo completo</a>
         </div>
     </section>
 
+    <div class="module-panel search-panel d-none" id="cliente-rapido-panel" data-save-url="{% url 'clientes:crear_rapido' %}">
+        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-2">
+            <div class="fw-semibold text-dark">Carga rapida de clientes</div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-outline-primary btn-sm" type="button" id="agregar-fila-cliente">Agregar fila</button>
+                <button class="btn btn-primary btn-sm" type="button" id="guardar-filas-clientes">Guardar pendientes</button>
+            </div>
+        </div>
+        <div class="d-none d-lg-block">
+            <div class="row g-2 px-1">
+                <div class="col-lg-3"><label class="form-label mb-1">Cliente</label></div>
+                <div class="col-lg-2"><label class="form-label mb-1">Telefono</label></div>
+                <div class="col-lg-2"><label class="form-label mb-1">Estado contacto</label></div>
+                <div class="col-lg-2"><label class="form-label mb-1">Direccion</label></div>
+                <div class="col-lg-2"><label class="form-label mb-1">Observacion</label></div>
+                <div class="col-lg-1"><label class="form-label mb-1">Estado</label></div>
+            </div>
+        </div>
+        <div class="d-grid gap-2" id="cliente-rapido-filas">
+            {% for index in "12345" %}
+                <form class="quick-client-row row g-2 align-items-end" method="post" action="{% url 'clientes:crear_rapido' %}" data-row-state="empty">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <div class="col-lg-3">
+                        <label class="form-label d-lg-none">Cliente</label>
+                        <input class="form-control" name="nombre_completo" placeholder="Nombre o referencia" autocomplete="off">
+                    </div>
+                    <div class="col-lg-2">
+                        <label class="form-label d-lg-none">Telefono</label>
+                        <input class="form-control" name="telefono" placeholder="0991234567" autocomplete="off">
+                    </div>
+                    <div class="col-lg-2">
+                        <label class="form-label d-lg-none">Estado contacto</label>
+                        <select class="form-select" name="estado_contacto">
+                            {% for value, label in estados_contacto %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-lg-2">
+                        <label class="form-label d-lg-none">Direccion</label>
+                        <input class="form-control" name="direccion" placeholder="Sector o referencia" autocomplete="off">
+                    </div>
+                    <div class="col-lg-2">
+                        <label class="form-label d-lg-none">Observacion</label>
+                        <input class="form-control" name="observacion" placeholder="Nota breve" autocomplete="off">
+                    </div>
+                    <div class="col-lg-1">
+                        <small class="quick-row-status text-muted d-block py-2" aria-live="polite"></small>
+                    </div>
+                </form>
+            {% endfor %}
+        </div>
+    </div>
+
     <form class="module-panel search-panel" method="get">
         <div class="row g-2 align-items-center">
-            <div class="col-lg-10">
-                <input class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar por nombre, telefono, ubicacion, direccion o cedula">
+            <div class="col-lg-2">
+                <input class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar cliente">
+            </div>
+            <div class="col-lg-2">
+                <select class="form-select" name="estado">
+                    <option value="">Activo e inactivo</option>
+                    {% for value, label in estados_cliente %}
+                        <option value="{{ value }}" {% if request.GET.estado == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <select class="form-select" name="estado_contacto">
+                    <option value="">Estados de contacto</option>
+                    {% for value, label in estados_contacto %}
+                        <option value="{{ value }}" {% if request.GET.estado_contacto == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <select class="form-select" name="tratamiento">
+                    <option value="">Tratamiento si/no</option>
+                    <option value="si" {% if request.GET.tratamiento == "si" %}selected{% endif %}>Tratamiento: Si</option>
+                    <option value="no" {% if request.GET.tratamiento == "no" %}selected{% endif %}>Tratamiento: No</option>
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <select class="form-select" name="fotos">
+                    <option value="">Todas las fotos</option>
+                    <option value="pendientes" {% if request.GET.fotos == "pendientes" %}selected{% endif %}>Fotos pendientes</option>
+                </select>
             </div>
             <div class="col-lg-2 d-grid">
-                <button class="btn btn-outline-primary" type="submit">Buscar</button>
+                <button class="btn btn-outline-primary" type="submit">Filtrar</button>
+            </div>
+        </div>
+        <div class="row g-2 align-items-center mt-2">
+            <div class="col-lg-3">
+                <input class="form-control" type="date" name="fecha_desde" value="{{ request.GET.fecha_desde }}" title="Inicio desde">
+            </div>
+            <div class="col-lg-3">
+                <input class="form-control" type="date" name="fecha_hasta" value="{{ request.GET.fecha_hasta }}" title="Inicio hasta">
             </div>
         </div>
     </form>
@@ -32,9 +125,9 @@
                 <thead>
                     <tr>
                         <th>Cliente</th>
-                        <th>Identificacion</th>
                         <th>Telefono</th>
-                        <th>Ubicaciones</th>
+                        <th>Inicio</th>
+                        <th>Estado contacto</th>
                         <th>Direccion</th>
                         <th>Estado</th>
                         <th></th>
@@ -44,19 +137,47 @@
                     {% for cliente in clientes %}
                         <tr>
                             <td><div class="fw-semibold text-dark">{{ cliente.nombre_mostrado }}</div></td>
-                            <td>{{ cliente.identificacion|default:"-" }}</td>
-                            <td>{{ cliente.telefono|default:"-" }}</td>
                             <td>
-                                {{ cliente.total_ubicaciones }}
-                                {% if cliente.total_ubicaciones %}
-                                    - {{ cliente.ubicacion_resumen|truncatechars:35 }}
+                                {% if cliente.whatsapp_url %}
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <a class="table-link" href="{{ cliente.whatsapp_url }}" target="_blank" rel="noopener">{{ cliente.telefono }}</a>
+                                        <a class="whatsapp-row-btn" href="{{ cliente.whatsapp_url }}" target="_blank" rel="noopener">WhatsApp</a>
+                                    </div>
                                 {% else %}
-                                    - -
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span>{{ cliente.telefono|default:"-" }}</span>
+                                        <span class="whatsapp-row-btn disabled">WhatsApp</span>
+                                    </div>
                                 {% endif %}
+                            </td>
+                            <td>{{ cliente.fecha_registro|date:"l d \d\e F \d\e Y H:i" }}</td>
+                            <td>
+                                <form class="m-0" method="post" action="{% url 'clientes:estado_contacto' cliente.pk %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <select class="form-select form-select-sm contact-status-select {{ cliente.estado_contacto_clase }}" name="estado_contacto" onchange="this.form.submit()" aria-label="Estado de contacto">
+                                        {% for value, label in estados_contacto %}
+                                            <option value="{{ value }}" {% if cliente.estado_contacto == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="visually-hidden" type="submit">Guardar estado</button>
+                                </form>
                             </td>
                             <td>{{ cliente.direccion|default:"-"|truncatechars:40 }}</td>
                             <td><span class="soft-badge {% if cliente.estado == 'ACTIVO' %}mint{% else %}sun{% endif %}">{{ cliente.get_estado_display }}</span></td>
-                            <td><a class="table-link" href="{% url 'clientes:detalle' cliente.pk %}">Ver ficha</a></td>
+                            <td>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a class="table-link" href="{% url 'clientes:detalle' cliente.pk %}">Ficha</a>
+                                </div>
+                                <form class="quick-observation-form mt-2" method="post" action="{% url 'clientes:agregar_observacion' cliente.pk %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <div class="input-group input-group-sm">
+                                        <input class="form-control" name="texto" placeholder="Agregar observacion">
+                                        <button class="btn btn-outline-primary" type="submit">Añadir</button>
+                                    </div>
+                                </form>
+                            </td>
                         </tr>
                     {% empty %}
                         <tr>
@@ -73,4 +194,156 @@
         </div>
     </div>
 </div>
+<script>
+    const quickClientButton = document.getElementById("mostrar-cliente-rapido");
+    const quickClientPanel = document.getElementById("cliente-rapido-panel");
+    const quickRowsContainer = document.getElementById("cliente-rapido-filas");
+    const addQuickRowButton = document.getElementById("agregar-fila-cliente");
+    const saveQuickRowsButton = document.getElementById("guardar-filas-clientes");
+    let activeQuickRow = null;
+
+    if (quickClientButton && quickClientPanel) {
+        quickClientButton.addEventListener("click", () => {
+            quickClientPanel.classList.toggle("d-none");
+            const firstInput = quickClientPanel.querySelector("input[name='nombre_completo']");
+            if (!quickClientPanel.classList.contains("d-none") && firstInput) {
+                firstInput.focus();
+            }
+        });
+    }
+
+    function getQuickRows() {
+        return Array.from(document.querySelectorAll(".quick-client-row"));
+    }
+
+    function rowHasClientData(row) {
+        const nombre = row.elements.nombre_completo.value.trim();
+        const telefono = row.elements.telefono.value.trim();
+        return Boolean(nombre || telefono);
+    }
+
+    function setRowStatus(row, message, className = "text-muted") {
+        const status = row.querySelector(".quick-row-status");
+        if (!status) {
+            return;
+        }
+        status.className = `quick-row-status ${className}`;
+        status.textContent = message;
+    }
+
+    function lockSavedRow(row, data) {
+        row.dataset.rowState = "saved";
+        row.dataset.clienteId = data.cliente_id;
+        row.dataset.editUrl = data.edit_url;
+        Array.from(row.elements).forEach((field) => {
+            if (field.name !== "csrfmiddlewaretoken" && field.name !== "next") {
+                field.disabled = true;
+            }
+        });
+        setRowStatus(row, "Guardado", "text-success");
+    }
+
+    async function saveQuickRow(row) {
+        if (!row || row.dataset.rowState === "saved" || row.dataset.rowState === "saving" || !rowHasClientData(row)) {
+            return null;
+        }
+
+        row.dataset.rowState = "saving";
+        setRowStatus(row, "Guardando...", "text-muted");
+
+        const response = await fetch(row.action, {
+            method: "POST",
+            body: new FormData(row),
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+            },
+        });
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+            row.dataset.rowState = "error";
+            setRowStatus(row, data.error || "No se pudo guardar", "text-danger");
+            return null;
+        }
+
+        lockSavedRow(row, data);
+        ensureBlankQuickRows();
+        return data;
+    }
+
+    function addQuickClientRow(focusRow = true) {
+        const firstRow = quickRowsContainer.querySelector(".quick-client-row");
+        const newRow = firstRow.cloneNode(true);
+
+        newRow.dataset.rowState = "empty";
+        delete newRow.dataset.clienteId;
+        delete newRow.dataset.editUrl;
+        newRow.reset();
+        Array.from(newRow.elements).forEach((field) => {
+            field.disabled = false;
+        });
+        setRowStatus(newRow, "");
+        quickRowsContainer.appendChild(newRow);
+
+        if (focusRow) {
+            newRow.elements.nombre_completo.focus();
+        }
+        return newRow;
+    }
+
+    function ensureBlankQuickRows(minBlankRows = 2) {
+        if (!quickRowsContainer) {
+            return;
+        }
+
+        const blankRows = getQuickRows().filter((row) => row.dataset.rowState !== "saved" && !rowHasClientData(row));
+        const rowsToAdd = Math.max(0, minBlankRows - blankRows.length);
+        for (let index = 0; index < rowsToAdd; index += 1) {
+            addQuickClientRow(false);
+        }
+    }
+
+    if (quickRowsContainer) {
+        quickRowsContainer.addEventListener("focusin", (event) => {
+            const nextRow = event.target.closest(".quick-client-row");
+            if (!nextRow || nextRow === activeQuickRow) {
+                return;
+            }
+
+            const previousRow = activeQuickRow;
+            activeQuickRow = nextRow;
+            saveQuickRow(previousRow);
+        });
+
+        quickRowsContainer.addEventListener("input", (event) => {
+            const row = event.target.closest(".quick-client-row");
+            if (row && row.dataset.rowState !== "saved") {
+                row.dataset.rowState = "editing";
+                setRowStatus(row, "");
+            }
+        });
+
+        quickRowsContainer.addEventListener("submit", (event) => {
+            event.preventDefault();
+        });
+    }
+
+    if (addQuickRowButton && quickRowsContainer) {
+        addQuickRowButton.addEventListener("click", () => addQuickClientRow());
+    }
+
+    if (saveQuickRowsButton) {
+        saveQuickRowsButton.addEventListener("click", async () => {
+            for (const row of getQuickRows()) {
+                await saveQuickRow(row);
+            }
+            const emptyRow = getQuickRows().find((row) => row.dataset.rowState !== "saved" && !rowHasClientData(row));
+            if (emptyRow) {
+                emptyRow.elements.nombre_completo.focus();
+            } else {
+                addQuickClientRow();
+            }
+        });
+    }
+</script>
 {% endblock %}

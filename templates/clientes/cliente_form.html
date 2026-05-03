@@ -2,89 +2,593 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">{% if object %}Editar cliente{% else %}Nuevo cliente{% endif %}</h1>
-    <a href="{% url 'clientes:lista' %}">Volver</a>
-</div>
-
-<div class="card soft-card">
-    <div class="card-body">
-        <form method="post">
-            {% csrf_token %}
-            <div class="alert alert-light border mb-4">
-                Puedes registrar varias ubicaciones del cliente y acompañarlas con una descripcion corta para identificarlas mejor.
-            </div>
-            <div class="row g-3">
-                {% for field in form %}
-                    <div class="{% if field.name == 'direccion' or field.name == 'observaciones' %}col-12{% else %}col-md-6{% endif %}">
-                        <label class="form-label">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
-                    </div>
-                {% endfor %}
-            </div>
-
-            <hr class="my-4">
-
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h2 class="h5 mb-0">Ubicaciones del cliente</h2>
-                    <div class="text-secondary small">Agrega una o varias referencias de ubicacion con su descripcion.</div>
-                </div>
-                <button class="btn btn-sm btn-outline-primary" type="button" id="agregar-ubicacion">Agregar fila</button>
-            </div>
-
-            {{ formset.management_form }}
-            <div id="ubicaciones-contenedor" class="d-grid gap-3">
-                {% for ubicacion_form in formset %}
-                    <div class="border rounded-4 p-3 ubicacion-item">
-                        {% for hidden in ubicacion_form.hidden_fields %}{{ hidden }}{% endfor %}
-                        <div class="row g-3 align-items-end">
-                            {% for field in ubicacion_form.visible_fields %}
-                                <div class="{% if field.name == 'DELETE' %}col-12{% else %}col-md-6{% endif %}">
-                                    <label class="form-label">{{ field.label }}</label>
-                                    {{ field }}
-                                    {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-
-            <button class="btn btn-primary mt-4" type="submit">Guardar</button>
-        </form>
+    <div>
+        <h1 class="h3 mb-0">{% if object %}Ficha del cliente{% else %}Nuevo cliente{% endif %}</h1>
+        {% if object %}
+            <div class="text-secondary">Registrado el {{ object.fecha_registro|date:"l d \d\e F \d\e Y" }} a las {{ object.fecha_registro|date:"H:i" }}</div>
+        {% endif %}
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        {% if object and object.whatsapp_url %}
+            <a class="btn btn-success" href="{{ object.whatsapp_url }}" target="_blank" rel="noopener">WhatsApp</a>
+        {% endif %}
+        <a class="btn btn-outline-primary" href="{% url 'clientes:lista' %}">Volver</a>
+        <button class="btn btn-outline-primary" type="submit" form="cliente-form" name="guardar_y_volver" value="1">Guardar y volver</button>
+        <button class="btn btn-primary" type="submit" form="cliente-form">Guardar</button>
     </div>
 </div>
 
-<template id="ubicacion-empty-form">
-    <div class="border rounded-4 p-3 ubicacion-item">
+{% if object %}
+    <div class="card soft-card mb-4">
+        <div class="card-body">
+            <div class="client-summary-grid">
+                <div class="client-summary-item">
+                    <div class="client-summary-label">Telefono</div>
+                    <div class="client-summary-value">{{ object.telefono|default:"-" }}</div>
+                </div>
+                <div class="client-summary-item">
+                    <div class="client-summary-label">Contacto</div>
+                    <div class="client-summary-value">{{ object.get_estado_contacto_display }}</div>
+                </div>
+                <div class="client-summary-item">
+                    <div class="client-summary-label">Comprado</div>
+                    <div class="client-summary-value">${{ total_comprado|floatformat:2 }}</div>
+                </div>
+                <div class="client-summary-item">
+                    <div class="client-summary-label">Ultima observacion</div>
+                    <div class="client-summary-value">
+                        {% if ultima_observacion %}{{ ultima_observacion.texto|truncatechars:54 }}{% else %}-{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" id="cliente-form" data-autosave-key="cliente-draft-{% if object %}{{ object.pk }}{% else %}nuevo{% endif %}">
+    {% csrf_token %}
+    <div class="row g-4">
+        <div class="col-xl-7">
+            <div class="card soft-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h5 mb-0">Datos del cliente</h2>
+                        <button class="btn btn-sm btn-primary" type="submit">Guardar</button>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label class="form-label">{{ form.nombre_completo.label }}</label>
+                            {{ form.nombre_completo }}
+                            {% if form.nombre_completo.errors %}<div class="text-danger small mt-1">{{ form.nombre_completo.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">{{ form.telefono.label }}</label>
+                            {{ form.telefono }}
+                            {% if form.telefono.errors %}<div class="text-danger small mt-1">{{ form.telefono.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.estado_contacto.label }}</label>
+                            {{ form.estado_contacto }}
+                            {% if form.estado_contacto.errors %}<div class="text-danger small mt-1">{{ form.estado_contacto.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.estado.label }}</label>
+                            {{ form.estado }}
+                            {% if form.estado.errors %}<div class="text-danger small mt-1">{{ form.estado.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">{{ form.direccion.label }}</label>
+                            {{ form.direccion }}
+                            {% if form.direccion.errors %}<div class="text-danger small mt-1">{{ form.direccion.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card soft-card mt-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h5 mb-0">Observaciones</h2>
+                        <button class="btn btn-sm btn-primary" type="submit">Guardar</button>
+                    </div>
+                    <div class="photo-upload-panel mb-3">
+                        <label class="form-label">{{ observacion_form.texto.label }}</label>
+                        <textarea class="form-control" name="nueva_observacion" rows="2" placeholder="Escribe una nueva observacion"></textarea>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        {% for observacion in observaciones_historial %}
+                            <div class="list-group-item px-0">
+                                <div class="text-secondary small">{{ observacion.fecha_registro|date:"l d \d\e F \d\e Y H:i" }}</div>
+                                <div>{{ observacion.texto }}</div>
+                            </div>
+                        {% empty %}
+                            <div class="text-secondary">Aun no hay observaciones registradas.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-5">
+            <div class="card soft-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h5 mb-0">Gestion</h2>
+                        <button class="btn btn-sm btn-primary" type="submit">Guardar</button>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">{{ gestion_form.tipo_interaccion.label }}</label>
+                            {{ gestion_form.tipo_interaccion }}
+                            {% if gestion_form.tipo_interaccion.errors %}<div class="text-danger small mt-1">{{ gestion_form.tipo_interaccion.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-12 gestion-field">
+                            <label class="form-label">{{ gestion_form.asunto.label }}</label>
+                            {{ gestion_form.asunto }}
+                            {% if gestion_form.asunto.errors %}<div class="text-danger small mt-1">{{ gestion_form.asunto.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6 gestion-field">
+                            <label class="form-label">{{ gestion_form.estado.label }}</label>
+                            {{ gestion_form.estado }}
+                            {% if gestion_form.estado.errors %}<div class="text-danger small mt-1">{{ gestion_form.estado.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6 gestion-field cita-field">
+                            <label class="form-label">{{ gestion_form.fecha_cita.label }}</label>
+                            {{ gestion_form.fecha_cita }}
+                            {% if gestion_form.fecha_cita.errors %}<div class="text-danger small mt-1">{{ gestion_form.fecha_cita.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6 gestion-field seguimiento-field">
+                            <label class="form-label">{{ gestion_form.proximo_contacto.label }}</label>
+                            {{ gestion_form.proximo_contacto }}
+                            {% if gestion_form.proximo_contacto.errors %}<div class="text-danger small mt-1">{{ gestion_form.proximo_contacto.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6 gestion-field">
+                            <div class="form-check form-switch mt-4">
+                                {{ gestion_form.tratamiento_aceptado }}
+                                <label class="form-check-label ms-2" for="{{ gestion_form.tratamiento_aceptado.id_for_label }}">{{ gestion_form.tratamiento_aceptado.label }}</label>
+                            </div>
+                            {% if gestion_form.tratamiento_aceptado.errors %}<div class="text-danger small mt-1">{{ gestion_form.tratamiento_aceptado.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6 gestion-field">
+                            <div class="form-check form-switch mt-4">
+                                {{ gestion_form.fotos_pendientes }}
+                                <label class="form-check-label ms-2" for="{{ gestion_form.fotos_pendientes.id_for_label }}">{{ gestion_form.fotos_pendientes.label }}</label>
+                            </div>
+                            {% if gestion_form.fotos_pendientes.errors %}<div class="text-danger small mt-1">{{ gestion_form.fotos_pendientes.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-12 gestion-field">
+                            <label class="form-label">{{ gestion_form.observacion.label }}</label>
+                            {{ gestion_form.observacion }}
+                            {% if gestion_form.observacion.errors %}<div class="text-danger small mt-1">{{ gestion_form.observacion.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card soft-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h5 mb-0">Fotos y archivos</h2>
+                        <button class="btn btn-sm btn-primary" type="submit">Guardar</button>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-xl-6">
+                            <div class="photo-upload-panel">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <div class="fw-bold">Fotos recibidas del cliente</div>
+                                        <div class="text-secondary small">Para imagenes que el cliente te envio por WhatsApp u otro canal.</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary" type="button" id="agregar-foto-recibida">Agregar foto</button>
+                                </div>
+
+                                {{ fotos_recibidas_formset.management_form }}
+                                <div id="fotos-recibidas-contenedor" class="d-grid gap-3">
+                                    {% for foto_form in fotos_recibidas_formset %}
+                                        <div class="border rounded p-3 formset-item">
+                                            {% for hidden in foto_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                            <div class="row g-3 align-items-end">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">{{ foto_form.archivo.label }}</label>
+                                                    {{ foto_form.archivo }}
+                                                    {% if foto_form.archivo.errors %}<div class="text-danger small mt-1">{{ foto_form.archivo.errors }}</div>{% endif %}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">{{ foto_form.descripcion.label }}</label>
+                                                    {{ foto_form.descripcion }}
+                                                    {% if foto_form.descripcion.errors %}<div class="text-danger small mt-1">{{ foto_form.descripcion.errors }}</div>{% endif %}
+                                                </div>
+                                                {% if foto_form.DELETE %}
+                                                    <div class="col-12">
+                                                        <div class="form-check">
+                                                            {{ foto_form.DELETE }}
+                                                            <label class="form-check-label" for="{{ foto_form.DELETE.id_for_label }}">Eliminar</label>
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-6">
+                            <div class="photo-upload-panel">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <div class="fw-bold">Fotos enviadas al cliente</div>
+                                        <div class="text-secondary small">Para evidencias o imagenes que el administrador envia.</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary" type="button" id="agregar-foto-enviada">Agregar foto</button>
+                                </div>
+
+                                {{ fotos_enviadas_formset.management_form }}
+                                <div id="fotos-enviadas-contenedor" class="d-grid gap-3">
+                                    {% for foto_form in fotos_enviadas_formset %}
+                                        <div class="border rounded p-3 formset-item">
+                                            {% for hidden in foto_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                            <input type="hidden" name="{{ foto_form.enviado_al_cliente.html_name }}" value="on">
+                                            <div class="row g-3 align-items-end">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">{{ foto_form.archivo.label }}</label>
+                                                    {{ foto_form.archivo }}
+                                                    {% if foto_form.archivo.errors %}<div class="text-danger small mt-1">{{ foto_form.archivo.errors }}</div>{% endif %}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">{{ foto_form.descripcion.label }}</label>
+                                                    {{ foto_form.descripcion }}
+                                                    {% if foto_form.descripcion.errors %}<div class="text-danger small mt-1">{{ foto_form.descripcion.errors }}</div>{% endif %}
+                                                </div>
+                                                {% if foto_form.DELETE %}
+                                                    <div class="col-12">
+                                                        <div class="form-check">
+                                                            {{ foto_form.DELETE }}
+                                                            <label class="form-check-label" for="{{ foto_form.DELETE.id_for_label }}">Eliminar</label>
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card soft-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
+                        <div>
+                            <h2 class="h5 mb-1">Compras del tratamiento</h2>
+                            <div class="text-secondary small">Agrega productos aqui mismo; al guardar se alimenta el historial del cliente.</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" type="button" id="agregar-compra">Agregar compra</button>
+                        <button class="btn btn-sm btn-primary" type="submit">Guardar</button>
+                    </div>
+
+                    {{ compras_formset.management_form }}
+                    {% if compras_formset.non_form_errors %}
+                        <div class="alert alert-danger py-2">{{ compras_formset.non_form_errors }}</div>
+                    {% endif %}
+                    <div id="compras-contenedor" class="d-grid gap-3">
+                        {% for compra_form in compras_formset %}
+                            <div class="border rounded p-3 compra-row">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-xl-4 col-md-6">
+                                        <label class="form-label">{{ compra_form.producto.label }}</label>
+                                        {{ compra_form.producto }}
+                                        {% if compra_form.producto.errors %}<div class="text-danger small mt-1">{{ compra_form.producto.errors }}</div>{% endif %}
+                                    </div>
+                                    <div class="col-xl-3 col-md-3">
+                                        <label class="form-label">{{ compra_form.cantidad.label }}</label>
+                                        {{ compra_form.cantidad }}
+                                        {% if compra_form.cantidad.errors %}<div class="text-danger small mt-1">{{ compra_form.cantidad.errors }}</div>{% endif %}
+                                    </div>
+                                    <div class="col-xl-3 col-md-4">
+                                        <label class="form-label">{{ compra_form.estado.label }}</label>
+                                        {{ compra_form.estado }}
+                                        {% if compra_form.estado.errors %}<div class="text-danger small mt-1">{{ compra_form.estado.errors }}</div>{% endif %}
+                                    </div>
+                                    <div class="col-md-2">
+                                        {% if compra_form.DELETE %}
+                                            <div class="form-check mb-2">
+                                                {{ compra_form.DELETE }}
+                                                <label class="form-check-label small" for="{{ compra_form.DELETE.id_for_label }}">Quitar</label>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="compra-meta compra-resumen">Precio, stock y total apareceran al elegir producto.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if object %}
+                        <div class="table-responsive mt-4">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Producto</th>
+                                        <th>Total</th>
+                                        <th>Estado</th>
+                                        <th>Eliminar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for pedido in pedidos_tratamiento %}
+                                        <tr>
+                                            <td>{{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</td>
+                                            <td>
+                                                {% for detalle in pedido.detalles.all %}
+                                                    <div>{{ detalle.producto.nombre }} x {{ detalle.cantidad }}</div>
+                                                {% endfor %}
+                                                {% if pedido.observaciones %}<div class="text-secondary small">{{ pedido.observaciones }}</div>{% endif %}
+                                            </td>
+                                            <td>${{ pedido.total|floatformat:2 }}</td>
+                                            <td>{{ pedido.get_estado_display }}</td>
+                                            <td>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="eliminar_pedidos" value="{{ pedido.pk }}" id="eliminar-pedido-{{ pedido.pk }}">
+                                                    <label class="form-check-label small" for="eliminar-pedido-{{ pedido.pk }}">Eliminar</label>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-secondary">Aun no hay compras registradas.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                <span class="draft-status" id="draft-status">Borrador listo</span>
+                <button class="btn btn-primary" type="submit">Guardar todo</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<template id="foto-recibida-empty-form">
+    <div class="border rounded p-3 formset-item">
         <div class="row g-3 align-items-end">
             <div class="col-md-6">
-                <label class="form-label" for="id_ubicaciones-__prefix__-enlace">Ubicacion</label>
-                <input type="text" name="ubicaciones-__prefix__-enlace" class="form-control" id="id_ubicaciones-__prefix__-enlace" placeholder="https://maps.google.com/... o referencia">
+                <label class="form-label" for="id_fotos_recibidas-__prefix__-archivo">Imagen o archivo</label>
+                <input type="file" name="fotos_recibidas-__prefix__-archivo" class="form-control" id="id_fotos_recibidas-__prefix__-archivo">
             </div>
             <div class="col-md-6">
-                <label class="form-label" for="id_ubicaciones-__prefix__-descripcion">Descripcion</label>
-                <input type="text" name="ubicaciones-__prefix__-descripcion" class="form-control" id="id_ubicaciones-__prefix__-descripcion" placeholder="Casa, trabajo, entrega, etc.">
+                <label class="form-label" for="id_fotos_recibidas-__prefix__-descripcion">Descripcion</label>
+                <input type="text" name="fotos_recibidas-__prefix__-descripcion" class="form-control" id="id_fotos_recibidas-__prefix__-descripcion">
             </div>
         </div>
     </div>
 </template>
 
-<script>
-    const addLocationButton = document.getElementById("agregar-ubicacion");
-    const totalLocationForms = document.getElementById("id_ubicaciones-TOTAL_FORMS");
-    const emptyLocationForm = document.getElementById("ubicacion-empty-form");
-    const locationContainer = document.getElementById("ubicaciones-contenedor");
+<template id="foto-enviada-empty-form">
+    <div class="border rounded p-3 formset-item">
+        <div class="row g-3 align-items-end">
+            <input type="hidden" name="fotos_enviadas-__prefix__-enviado_al_cliente" value="on">
+            <div class="col-md-6">
+                <label class="form-label" for="id_fotos_enviadas-__prefix__-archivo">Imagen o archivo</label>
+                <input type="file" name="fotos_enviadas-__prefix__-archivo" class="form-control" id="id_fotos_enviadas-__prefix__-archivo">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="id_fotos_enviadas-__prefix__-descripcion">Descripcion</label>
+                <input type="text" name="fotos_enviadas-__prefix__-descripcion" class="form-control" id="id_fotos_enviadas-__prefix__-descripcion">
+            </div>
+        </div>
+    </div>
+</template>
 
-    if (addLocationButton && totalLocationForms && emptyLocationForm && locationContainer) {
-        addLocationButton.addEventListener("click", () => {
-            const index = Number(totalLocationForms.value);
-            const content = emptyLocationForm.innerHTML.replaceAll("__prefix__", index);
-            locationContainer.insertAdjacentHTML("beforeend", content);
-            totalLocationForms.value = index + 1;
+<template id="compra-empty-form">
+    <div class="border rounded p-3 compra-row">
+        <div class="row g-3 align-items-end">
+            <div class="col-xl-4 col-md-6">
+                <label class="form-label" for="id_compras-__prefix__-producto">Producto o tratamiento</label>
+                <select name="compras-__prefix__-producto" class="form-select compra-producto" id="id_compras-__prefix__-producto">
+                    <option value="" selected>---------</option>
+                    {% for producto in compras_formset.forms.0.fields.producto.queryset %}
+                        <option value="{{ producto.pk }}">{{ producto.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-xl-3 col-md-3">
+                <label class="form-label" for="id_compras-__prefix__-cantidad">Cantidad</label>
+                <input type="number" name="compras-__prefix__-cantidad" class="form-control compra-cantidad" min="1" id="id_compras-__prefix__-cantidad">
+            </div>
+            <div class="col-xl-3 col-md-4">
+                <label class="form-label" for="id_compras-__prefix__-estado">Estado</label>
+                <select name="compras-__prefix__-estado" class="form-select" id="id_compras-__prefix__-estado">
+                    <option value="PENDIENTE">Pendiente</option>
+                    <option value="PAGADO" selected>Pagado</option>
+                    <option value="EN_PROCESO">En proceso</option>
+                    <option value="ENTREGADO">Entregado</option>
+                    <option value="CANCELADO">Cancelado</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-danger btn-sm quitar-compra" type="button">Quitar</button>
+            </div>
+            <div class="col-12">
+                <div class="compra-meta compra-resumen">Precio, stock y total apareceran al elegir producto.</div>
+            </div>
+        </div>
+    </div>
+</template>
+
+{{ productos_json|json_script:"productos-compra-data" }}
+<script>
+    const setupPhotoFormset = (buttonId, totalId, templateId, containerId) => {
+        const addButton = document.getElementById(buttonId);
+        const totalForms = document.getElementById(totalId);
+        const emptyForm = document.getElementById(templateId);
+        const container = document.getElementById(containerId);
+
+        if (!addButton || !totalForms || !emptyForm || !container) {
+            return null;
+        }
+
+        const addForm = () => {
+            const index = Number(totalForms.value);
+            const content = emptyForm.innerHTML.replaceAll("__prefix__", index);
+            container.insertAdjacentHTML("beforeend", content);
+            totalForms.value = index + 1;
+        };
+
+        addButton.addEventListener("click", addForm);
+        return { totalForms, addForm };
+    };
+
+    const fotosRecibidas = setupPhotoFormset(
+        "agregar-foto-recibida",
+        "id_fotos_recibidas-TOTAL_FORMS",
+        "foto-recibida-empty-form",
+        "fotos-recibidas-contenedor"
+    );
+    const fotosEnviadas = setupPhotoFormset(
+        "agregar-foto-enviada",
+        "id_fotos_enviadas-TOTAL_FORMS",
+        "foto-enviada-empty-form",
+        "fotos-enviadas-contenedor"
+    );
+
+    const comprasContainer = document.getElementById("compras-contenedor");
+    const compraTotalForms = document.getElementById("id_compras-TOTAL_FORMS");
+    const addCompraButton = document.getElementById("agregar-compra");
+    const compraTemplate = document.getElementById("compra-empty-form");
+    const productosCompra = JSON.parse(document.getElementById("productos-compra-data").textContent);
+    const money = (value) => Number(value || 0).toFixed(2);
+    const productoCompra = (id) => productosCompra.find((producto) => String(producto.id) === String(id));
+
+    const bindCompraRow = (row) => {
+        const select = row.querySelector(".compra-producto");
+        const cantidadInput = row.querySelector(".compra-cantidad");
+        const resumen = row.querySelector(".compra-resumen");
+        const actualizarResumen = () => {
+            if (!resumen) return;
+            const producto = productoCompra(select?.value);
+            const cantidad = Number(cantidadInput?.value || 0);
+            if (!producto) {
+                resumen.textContent = "Precio, stock y total apareceran al elegir producto.";
+                return;
+            }
+            resumen.textContent = `Precio $${money(producto.precio)} · Stock ${producto.stock_disponible} · Total $${money(Number(producto.precio || 0) * cantidad)}`;
+        };
+        select?.addEventListener("change", () => {
+            if (select.value && !cantidadInput.value) {
+                cantidadInput.value = 1;
+            }
+            actualizarResumen();
         });
+        cantidadInput?.addEventListener("input", actualizarResumen);
+        row.querySelector(".quitar-compra")?.addEventListener("click", () => {
+            row.remove();
+        });
+        actualizarResumen();
+    };
+
+    addCompraButton?.addEventListener("click", () => {
+        const index = Number(compraTotalForms.value);
+        comprasContainer.insertAdjacentHTML("beforeend", compraTemplate.innerHTML.replaceAll("__prefix__", index));
+        compraTotalForms.value = index + 1;
+        bindCompraRow(comprasContainer.lastElementChild);
+    });
+
+    document.querySelectorAll(".compra-row").forEach(bindCompraRow);
+
+    const ensureDraftRows = (draft, prefix, formset) => {
+        if (!formset) return;
+        const maxIndex = Object.keys(draft).reduce((currentMax, name) => {
+            const match = name.match(new RegExp(`^${prefix}-(\\d+)-`));
+            return match ? Math.max(currentMax, Number(match[1])) : currentMax;
+        }, -1);
+        while (Number(formset.totalForms.value) <= maxIndex) {
+            formset.addForm();
+        }
+    };
+
+    const clienteForm = document.getElementById("cliente-form");
+    const draftStatus = document.getElementById("draft-status");
+    if (clienteForm && window.localStorage) {
+        const autosaveKey = clienteForm.dataset.autosaveKey;
+        const fields = () => Array.from(clienteForm.elements).filter((field) => {
+            return field.name && field.type !== "hidden" && field.type !== "file" && field.type !== "submit";
+        });
+        const restoreDraft = () => {
+            const rawDraft = localStorage.getItem(autosaveKey);
+            if (!rawDraft) return;
+            const draft = JSON.parse(rawDraft);
+            ensureDraftRows(draft, "fotos_recibidas", fotosRecibidas);
+            ensureDraftRows(draft, "fotos_enviadas", fotosEnviadas);
+            ensureDraftRows(draft, "compras", { totalForms: compraTotalForms, addForm: () => addCompraButton?.click() });
+            fields().forEach((field) => {
+                if (!(field.name in draft)) return;
+                if (field.type === "checkbox") {
+                    field.checked = Boolean(draft[field.name]);
+                } else {
+                    field.value = draft[field.name];
+                }
+            });
+        };
+        const saveDraft = () => {
+            const draft = {};
+            fields().forEach((field) => {
+                draft[field.name] = field.type === "checkbox" ? field.checked : field.value;
+            });
+            localStorage.setItem(autosaveKey, JSON.stringify(draft));
+            if (draftStatus) draftStatus.textContent = "Borrador guardado";
+        };
+        restoreDraft();
+        clienteForm.addEventListener("input", saveDraft);
+        clienteForm.addEventListener("change", () => {
+            if (draftStatus) draftStatus.textContent = "Cambios sin guardar";
+            saveDraft();
+        });
+        clienteForm.addEventListener("submit", () => {
+            localStorage.removeItem(autosaveKey);
+            if (draftStatus) draftStatus.textContent = "Guardando";
+        });
+    }
+
+    const tipoGestion = document.getElementById("id_gestion-tipo_interaccion");
+    const fechaCita = document.getElementById("id_gestion-fecha_cita");
+    const proximoContacto = document.getElementById("id_gestion-proximo_contacto");
+    const gestionFields = Array.from(document.querySelectorAll(".gestion-field"));
+    const citaFields = Array.from(document.querySelectorAll(".cita-field"));
+    const seguimientoFields = Array.from(document.querySelectorAll(".seguimiento-field"));
+
+    const toggleGestionFields = () => {
+        if (!tipoGestion) return;
+        const tipo = tipoGestion.value;
+        gestionFields.forEach((field) => field.classList.toggle("d-none", !tipo));
+        citaFields.forEach((field) => field.classList.toggle("d-none", tipo !== "CITA"));
+        seguimientoFields.forEach((field) => field.classList.toggle("d-none", tipo === "CITA" || !tipo));
+    };
+
+    if (tipoGestion && fechaCita && proximoContacto) {
+        tipoGestion.addEventListener("change", toggleGestionFields);
+        fechaCita.addEventListener("change", () => {
+            if (tipoGestion.value === "CITA" && fechaCita.value && !proximoContacto.value) {
+                proximoContacto.value = fechaCita.value;
+            }
+        });
+        toggleGestionFields();
     }
 </script>
 {% endblock %}

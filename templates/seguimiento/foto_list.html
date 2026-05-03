@@ -6,7 +6,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h1 class="h3 mb-0">Fotos y archivos</h1>
-        <div class="text-secondary">Filtra las imagenes enviadas por cliente, texto o fecha.</div>
+        <div class="text-secondary">Filtra las imagenes recibidas o enviadas por cliente, texto o fecha.</div>
     </div>
     <a class="btn btn-outline-primary" href="{% url 'seguimiento:lista' %}">Volver a seguimientos</a>
 </div>
@@ -39,7 +39,12 @@
             <div class="card soft-card h-100">
                 <div class="card-body">
                     <div class="fw-semibold">{{ foto.cliente.nombre_mostrado }}</div>
-                    <div class="text-secondary small mb-2">{{ foto.fecha_envio|date:"d/m/Y H:i" }}</div>
+                    <div class="text-secondary small mb-2">{{ foto.fecha_envio|date:"l d \d\e F \d\e Y H:i" }}</div>
+                    <div class="mb-2">
+                        <span class="soft-badge {% if foto.enviado_al_cliente %}status-juan{% else %}status-sms-juan{% endif %}">
+                            {% if foto.enviado_al_cliente %}Enviada al cliente{% else %}Recibida del cliente{% endif %}
+                        </span>
+                    </div>
                     <div class="mb-3">{{ foto.descripcion|default:"Sin descripcion" }}</div>
                     <a class="btn btn-sm btn-outline-dark" href="{{ foto.archivo.url }}" target="_blank">Abrir archivo</a>
                 </div>

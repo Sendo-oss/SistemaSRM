@@ -5,7 +5,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <h1 class="h3 mb-0">{% if object %}Editar seguimiento{% else %}Nuevo seguimiento{% endif %}</h1>
+        <h1 class="h3 mb-0">Editar seguimiento</h1>
         {% if cliente_preseleccionado %}
             <div class="text-secondary">Cliente: {{ cliente_preseleccionado.nombre_mostrado }}</div>
         {% endif %}
@@ -25,12 +25,14 @@
                                 {{ field }}
                                 <label class="form-check-label ms-2" for="{{ field.id_for_label }}">{{ field.label }}</label>
                             </div>
+                            {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
                             {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
                         </div>
                     {% else %}
                         <div class="{% if field.name == 'observacion' %}col-12{% else %}col-md-6{% endif %}">
                             <label class="form-label">{{ field.label }}</label>
                             {{ field }}
+                            {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
                             {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
                         </div>
                     {% endif %}
@@ -42,7 +44,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h2 class="h5 mb-0">Fotos o archivos enviados</h2>
-                    <div class="text-secondary small">Puedes adjuntar una o varias evidencias del tratamiento.</div>
+                    <div class="text-secondary small">Puedes adjuntar una o varias evidencias del tratamiento. La fecha se registra automaticamente.</div>
                 </div>
                 <button class="btn btn-sm btn-outline-primary" type="button" id="agregar-foto">Agregar fila</button>
             </div>
@@ -82,15 +84,10 @@
                 <input type="text" name="fotos-__prefix__-descripcion" class="form-control" id="id_fotos-__prefix__-descripcion">
             </div>
             <div class="col-md-6">
-                <label class="form-label" for="id_fotos-__prefix__-fecha_envio">Fecha de envio</label>
-                <input type="datetime-local" name="fotos-__prefix__-fecha_envio" class="form-control" id="id_fotos-__prefix__-fecha_envio">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label" for="id_fotos-__prefix__-enviado_al_cliente">Enviado al cliente</label>
-                <select name="fotos-__prefix__-enviado_al_cliente" class="form-select" id="id_fotos-__prefix__-enviado_al_cliente">
-                    <option value="True" selected>Si</option>
-                    <option value="">No</option>
-                </select>
+                <div class="form-check form-switch mt-4">
+                    <input type="checkbox" name="fotos-__prefix__-enviado_al_cliente" class="form-check-input" id="id_fotos-__prefix__-enviado_al_cliente" checked>
+                    <label class="form-check-label ms-2" for="id_fotos-__prefix__-enviado_al_cliente">Cliente envio la foto</label>
+                </div>
             </div>
         </div>
     </div>
@@ -108,6 +105,22 @@
             const content = emptyForm.innerHTML.replaceAll("__prefix__", index);
             container.insertAdjacentHTML("beforeend", content);
             totalForms.value = index + 1;
+        });
+    }
+
+    const tipoGestion = document.getElementById("id_tipo_interaccion");
+    const fechaCita = document.getElementById("id_fecha_cita");
+    const fechaContacto = document.getElementById("id_fecha_interaccion");
+    const proximoContacto = document.getElementById("id_proximo_contacto");
+
+    if (tipoGestion && fechaCita && fechaContacto && proximoContacto) {
+        fechaCita.addEventListener("change", () => {
+            if (tipoGestion.value === "CITA" && fechaCita.value) {
+                fechaContacto.value = fechaCita.value;
+                if (!proximoContacto.value) {
+                    proximoContacto.value = fechaCita.value;
+                }
+            }
         });
     }
 </script>

@@ -20,6 +20,7 @@ class SeguimientoCliente(models.Model):
         LLAMADA = "LLAMADA", "Llamada"
         CITA = "CITA", "Cita"
         ENVIO_FOTOS = "ENVIO_FOTOS", "Envio de fotos"
+        FOTOS_PENDIENTES = "FOTOS_PENDIENTES", "Fotos pendientes"
         SEGUIMIENTO = "SEGUIMIENTO", "Seguimiento"
 
     class Estado(models.TextChoices):
@@ -61,6 +62,8 @@ class SeguimientoCliente(models.Model):
     def clean(self):
         if self.tipo_interaccion == self.TipoInteraccion.CITA and not self.fecha_cita:
             raise ValidationError({"fecha_cita": "Debes indicar la fecha y hora de la cita."})
+        if self.tipo_interaccion == self.TipoInteraccion.CITA and self.fecha_cita and self.fecha_cita < timezone.now():
+            raise ValidationError({"fecha_cita": "Las citas solo se pueden agendar desde la fecha y hora actual en adelante."})
 
     @property
     def es_pendiente(self):
@@ -87,6 +90,11 @@ class SeguimientoCliente(models.Model):
 
         if self.tipo_interaccion == self.TipoInteraccion.CITA and self.estado == self.Estado.PENDIENTE:
             self.estado = self.Estado.AGENDADO
+
+        if self.tipo_interaccion == self.TipoInteraccion.CITA and self.fecha_cita:
+            self.fecha_interaccion = self.fecha_cita
+            if not self.proximo_contacto:
+                self.proximo_contacto = self.fecha_cita
 
         super().save(*args, **kwargs)
 
