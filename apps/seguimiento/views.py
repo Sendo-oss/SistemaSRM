@@ -1,6 +1,6 @@
 import calendar
 from collections import defaultdict
-from datetime import date
+from datetime import date, timedelta
 from urllib.parse import urlencode
 
 from django.contrib import messages
@@ -294,24 +294,42 @@ class AgendaCitasView(LoginRequiredMixin, SoloPersonalMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        hoy = date.today()
+        hoy = timezone.localdate()
         year = int(self.request.GET.get("year", hoy.year))
         month = int(self.request.GET.get("month", hoy.month))
+        day = int(self.request.GET.get("day", hoy.day if year == hoy.year and month == hoy.month else 1))
+        vista = self.request.GET.get("vista", "mes")
+        if vista not in {"mes", "semana", "dia"}:
+            vista = "mes"
+
+        _, ultimo_dia = calendar.monthrange(year, month)
+        day = min(max(day, 1), ultimo_dia)
+        fecha_seleccionada = date(year, month, day)
 
         calendario = calendar.Calendar(firstweekday=0)
-        citas = (
-            SeguimientoCliente.objects.filter(
-                tipo_interaccion=SeguimientoCliente.TipoInteraccion.CITA,
-                fecha_cita__year=year,
-                fecha_cita__month=month,
-            )
-            .select_related("cliente")
-            .order_by("fecha_cita")
-        )
+        inicio_mes = date(year, month, 1)
+        fin_mes = date(year, month, ultimo_dia)
+        inicio_semana = fecha_seleccionada - timedelta(days=fecha_seleccionada.weekday())
+        fin_semana = inicio_semana + timedelta(days=6)
 
-        citas_por_dia = defaultdict(list)
-        for cita in citas:
-            citas_por_dia[cita.fecha_cita.date()].append(cita)
+        def seguimientos_en_rango(inicio, fin):
+            return (
+                SeguimientoCliente.objects.filter(
+                    Q(fecha_cita__date__range=(inicio, fin))
+                    | Q(fecha_cita__isnull=True, proximo_contacto__date__range=(inicio, fin))
+                    | Q(fecha_cita__isnull=True, proximo_contacto__isnull=True, fecha_interaccion__date__range=(inicio, fin))
+                )
+                .select_related("cliente", "usuario")
+                .order_by("fecha_cita", "proximo_contacto", "fecha_interaccion")
+            )
+
+        eventos_mes = seguimientos_en_rango(inicio_mes, fin_mes)
+        eventos_semana = list(seguimientos_en_rango(inicio_semana, fin_semana))
+        eventos_dia = list(seguimientos_en_rango(fecha_seleccionada, fecha_seleccionada))
+
+        eventos_por_dia = defaultdict(list)
+        for evento in eventos_mes:
+            eventos_por_dia[evento.fecha_referencia.date()].append(evento)
 
         semanas = []
         for semana in calendario.monthdatescalendar(year, month):
@@ -321,13 +339,18 @@ class AgendaCitasView(LoginRequiredMixin, SoloPersonalMixin, TemplateView):
                     {
                         "fecha": dia,
                         "en_mes": dia.month == month,
-                        "citas": citas_por_dia.get(dia, []),
+                        "eventos": eventos_por_dia.get(dia, []),
+                        "es_hoy": dia == hoy,
                     }
                 )
             semanas.append(dias)
 
         mes_anterior = date(year - 1, 12, 1) if month == 1 else date(year, month - 1, 1)
         mes_siguiente = date(year + 1, 1, 1) if month == 12 else date(year, month + 1, 1)
+        dia_anterior = fecha_seleccionada - timedelta(days=1)
+        dia_siguiente = fecha_seleccionada + timedelta(days=1)
+        semana_anterior = fecha_seleccionada - timedelta(days=7)
+        semana_siguiente = fecha_seleccionada + timedelta(days=7)
 
         context.update(
             {
@@ -335,6 +358,21 @@ class AgendaCitasView(LoginRequiredMixin, SoloPersonalMixin, TemplateView):
                 "mes_actual": date(year, month, 1),
                 "mes_anterior": mes_anterior,
                 "mes_siguiente": mes_siguiente,
+                "vista": vista,
+                "fecha_seleccionada": fecha_seleccionada,
+                "inicio_semana": inicio_semana,
+                "fin_semana": fin_semana,
+                "dias_semana": [
+                    {"fecha": inicio_semana + timedelta(days=i), "eventos": [e for e in eventos_semana if e.fecha_referencia.date() == inicio_semana + timedelta(days=i)]}
+                    for i in range(7)
+                ],
+                "eventos_dia": eventos_dia,
+                "eventos_panel": eventos_dia if vista == "dia" else eventos_semana if vista == "semana" else list(eventos_mes)[:20],
+                "dia_anterior": dia_anterior,
+                "dia_siguiente": dia_siguiente,
+                "semana_anterior": semana_anterior,
+                "semana_siguiente": semana_siguiente,
+                "estados_seguimiento": SeguimientoCliente.Estado.choices,
                 "citas_proximas": SeguimientoCliente.objects.filter(
                     tipo_interaccion=SeguimientoCliente.TipoInteraccion.CITA,
                     fecha_cita__gte=timezone.now(),
@@ -344,6 +382,33 @@ class AgendaCitasView(LoginRequiredMixin, SoloPersonalMixin, TemplateView):
             }
         )
         return context
+
+
+class AgendaSeguimientoActionView(LoginRequiredMixin, SoloPersonalMixin, View):
+    def post(self, request, pk):
+        seguimiento = get_object_or_404(SeguimientoCliente, pk=pk)
+        estado = request.POST.get("estado")
+        observacion = (request.POST.get("observacion") or "").strip()
+        update_fields = []
+
+        estados_validos = {value for value, _label in SeguimientoCliente.Estado.choices}
+        if estado in estados_validos and estado != seguimiento.estado:
+            seguimiento.estado = estado
+            update_fields.append("estado")
+
+        if observacion:
+            fecha = timezone.localtime().strftime("%d/%m/%Y %H:%M")
+            nueva_observacion = f"[{fecha}] {observacion}"
+            seguimiento.observacion = "\n".join(filter(None, [seguimiento.observacion, nueva_observacion]))
+            update_fields.append("observacion")
+
+        if update_fields:
+            seguimiento.save(update_fields=update_fields)
+            messages.success(request, "Seguimiento actualizado desde la agenda.")
+        else:
+            messages.info(request, "No hubo cambios para guardar.")
+
+        return HttpResponseRedirect(request.POST.get("next") or reverse("seguimiento:agenda"))
 
 
 class FotoSeguimientoListView(LoginRequiredMixin, SoloPersonalMixin, ListView):

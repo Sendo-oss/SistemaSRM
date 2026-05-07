@@ -7,6 +7,7 @@ from .views import (
     ClienteListView,
     ClienteObservacionCreateView,
     ClienteQuickCreateView,
+    ClienteSeguimientoCardActionView,
     ClienteUpdateView,
 )
 
@@ -18,6 +19,11 @@ urlpatterns = [
     path("rapido/", ClienteQuickCreateView.as_view(), name="crear_rapido"),
     path("<int:pk>/estado-contacto/", ClienteEstadoContactoUpdateView.as_view(), name="estado_contacto"),
     path("<int:pk>/observaciones/", ClienteObservacionCreateView.as_view(), name="agregar_observacion"),
+    path(
+        "<int:cliente_pk>/seguimientos/<int:seguimiento_pk>/tarjeta/",
+        ClienteSeguimientoCardActionView.as_view(),
+        name="seguimiento_tarjeta",
+    ),
     path("<int:pk>/", ClienteDetailView.as_view(), name="detalle"),
     path("<int:pk>/editar/", ClienteUpdateView.as_view(), name="editar"),
 ]

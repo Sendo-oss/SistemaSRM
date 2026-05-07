@@ -1,0 +1,210 @@
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\clientes\models.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\clientes\forms.py changed, reloading.
+Watching for file changes with StatReloader
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Users\Michu\SistemaSRM\.python_packages\django\core\checks\urls.py", line 136, in check_custom_error_handlers
+    handler = resolver.resolve_error_handler(status_code)
+  File "C:\Users\Michu\SistemaSRM\.python_packages\django\urls\resolvers.py", line 732, in resolve_error_handler
+    callback = getattr(self.urlconf_module, "handler%s" % view_type, None)
+                       ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Michu\SistemaSRM\.python_packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\Michu\SistemaSRM\.python_packages\django\urls\resolvers.py", line 711, in urlconf_module
+    return import_module(self.urlconf_name)
+  File "importlib\__init__.py", line 88, in import_module
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Users\Michu\SistemaSRM\config\urls.py", line 22, in <module>
+    path("clientes/", include("apps.clientes.urls")),
+                      ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Michu\SistemaSRM\.python_packages\django\urls\conf.py", line 39, in include
+    urlconf_module = import_module(urlconf_module)
+  File "importlib\__init__.py", line 88, in import_module
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Users\Michu\SistemaSRM\apps\clientes\urls.py", line 3, in <module>
+    from .views import ClienteCreateView, ClienteDetailView, ClienteListView, ClienteUpdateView
+  File "C:\Users\Michu\SistemaSRM\apps\clientes\views.py", line 15, in <module>
+    from .forms import ClienteForm, GestionInicialForm, UbicacionClienteFormSet
+ImportError: cannot import name 'UbicacionClienteFormSet' from 'apps.clientes.forms' (C:\Users\Michu\SistemaSRM\apps\clientes\forms.py)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "threading.py", line 1043, in _bootstrap_inner
+  File "threading.py", line 994, in run
+  File "C:\Users\Michu\SistemaSRM\.python_packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Michu\SistemaSRM\.python_packages\django\core\management\commands\runserver.py", line 134, in inner_run
+    self.check(**check_kwargs)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\Michu\SistemaSRM\.python_packages\django\core\management\base.py", line 496, in check
+    all_issues = checks.run_checks(
+        app_configs=app_configs,
+    ...<2 lines>...
+        databases=databases,
+    )
+  File "C:\Users\Michu\SistemaSRM\.python_packages\django\core\checks\registry.py", line 89, in run_checks
+    new_errors = check(app_configs=app_configs, databases=databases)
+  File "C:\Users\Michu\SistemaSRM\.python_packages\django\core\checks\urls.py", line 138, in check_custom_error_handlers
+    path = getattr(resolver.urlconf_module, "handler%s" % status_code)
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Michu\SistemaSRM\.python_packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\Michu\SistemaSRM\.python_packages\django\urls\resolvers.py", line 711, in urlconf_module
+    return import_module(self.urlconf_name)
+  File "importlib\__init__.py", line 88, in import_module
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Users\Michu\SistemaSRM\config\urls.py", line 22, in <module>
+    path("clientes/", include("apps.clientes.urls")),
+                      ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Michu\SistemaSRM\.python_packages\django\urls\conf.py", line 39, in include
+    urlconf_module = import_module(urlconf_module)
+  File "importlib\__init__.py", line 88, in import_module
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Users\Michu\SistemaSRM\apps\clientes\urls.py", line 3, in <module>
+    from .views import ClienteCreateView, ClienteDetailView, ClienteListView, ClienteUpdateView
+  File "C:\Users\Michu\SistemaSRM\apps\clientes\views.py", line 15, in <module>
+    from .forms import ClienteForm, GestionInicialForm, UbicacionClienteFormSet
+ImportError: cannot import name 'UbicacionClienteFormSet' from 'apps.clientes.forms' (C:\Users\Michu\SistemaSRM\apps\clientes\forms.py)
+C:\Users\Michu\SistemaSRM\apps\clientes\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\clientes\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\clientes\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\clientes\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\clientes\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\clientes\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\clientes\admin.py changed, reloading.
+Watching for file changes with StatReloader
+[29/Apr/2026 19:49:46] "GET /clientes/ HTTP/1.1" 302 0
+[29/Apr/2026 19:49:46] "GET /login/?next=/clientes/ HTTP/1.1" 200 37425
+[29/Apr/2026 19:49:46,854] - Broken pipe from ('127.0.0.1', 63762)
+[29/Apr/2026 19:50:45] "GET /clientes/ HTTP/1.1" 200 35543
+[29/Apr/2026 19:50:48] "GET /clientes/2/ HTTP/1.1" 200 34953
+[29/Apr/2026 19:51:59] "GET /clientes/2/editar/ HTTP/1.1" 200 44685
+C:\Users\Michu\SistemaSRM\apps\clientes\forms.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\clientes\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\seguimiento\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\seguimiento\views.py changed, reloading.
+Watching for file changes with StatReloader
+[29/Apr/2026 20:09:38] "GET /clientes/2/editar/ HTTP/1.1" 200 45946
+[29/Apr/2026 20:09:51] "GET /clientes/ HTTP/1.1" 200 35535
+[29/Apr/2026 20:09:52] "GET /seguimientos/agenda/ HTTP/1.1" 200 49440
+[29/Apr/2026 20:09:53] "GET /clientes/nuevo/?tipo=CITA HTTP/1.1" 200 45825
+[29/Apr/2026 20:09:55] "GET /seguimientos/agenda/ HTTP/1.1" 200 49440
+[29/Apr/2026 20:09:56] "GET / HTTP/1.1" 200 35133
+[29/Apr/2026 20:09:59] "GET /clientes/ HTTP/1.1" 200 35535
+[29/Apr/2026 20:24:22] "GET /clientes/2/ HTTP/1.1" 200 34912
+[29/Apr/2026 20:24:24] "GET /clientes/2/editar/ HTTP/1.1" 200 45946
+[29/Apr/2026 20:24:31] "POST /clientes/2/editar/ HTTP/1.1" 302 0
+[29/Apr/2026 20:24:31] "GET /clientes/2/ HTTP/1.1" 200 35094
+[29/Apr/2026 20:24:35] "GET /clientes/ HTTP/1.1" 200 35548
+[29/Apr/2026 22:41:15] "GET /clientes/2/ HTTP/1.1" 200 34925
+[29/Apr/2026 22:41:36] "GET /usuarios/ HTTP/1.1" 200 32248
+[29/Apr/2026 22:41:39] "GET /catalogo/ HTTP/1.1" 200 32927
+[29/Apr/2026 22:41:43] "GET /catalogo/1/ HTTP/1.1" 200 34276
+[29/Apr/2026 22:41:50] "GET /clientes/ HTTP/1.1" 200 35548
+C:\Users\Michu\SistemaSRM\apps\clientes\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\clientes\urls.py changed, reloading.
+Watching for file changes with StatReloader
+[29/Apr/2026 22:44:50] "GET /clientes/ HTTP/1.1" 200 39454
+[29/Apr/2026 22:44:55] "POST /clientes/2/estado-contacto/ HTTP/1.1" 302 0
+[29/Apr/2026 22:44:55] "GET /clientes/ HTTP/1.1" 200 39456
+[29/Apr/2026 22:46:56] "GET /clientes/ HTTP/1.1" 200 40711
+[29/Apr/2026 22:47:02] "POST /clientes/1/estado-contacto/ HTTP/1.1" 302 0
+[29/Apr/2026 22:47:02] "GET /clientes/ HTTP/1.1" 200 40713
+[29/Apr/2026 22:58:35] "POST /clientes/1/estado-contacto/ HTTP/1.1" 302 0
+[29/Apr/2026 22:58:35] "GET /clientes/ HTTP/1.1" 200 40717
+[29/Apr/2026 22:58:37] "POST /clientes/2/estado-contacto/ HTTP/1.1" 302 0
+[29/Apr/2026 22:58:37] "GET /clientes/ HTTP/1.1" 200 40715
+[29/Apr/2026 22:58:39] "POST /clientes/2/estado-contacto/ HTTP/1.1" 302 0
+[29/Apr/2026 22:58:39] "GET /clientes/ HTTP/1.1" 200 40717
+[29/Apr/2026 22:58:40] "POST /clientes/2/estado-contacto/ HTTP/1.1" 302 0
+[29/Apr/2026 22:58:40] "GET /clientes/ HTTP/1.1" 200 40721
+[29/Apr/2026 22:58:54] "GET /clientes/nuevo/ HTTP/1.1" 200 47525
+C:\Users\Michu\SistemaSRM\apps\clientes\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\clientes\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\seguimiento\forms.py changed, reloading.
+Watching for file changes with StatReloader
+[29/Apr/2026 23:04:37] "GET /clientes/nuevo/ HTTP/1.1" 200 52731
+[29/Apr/2026 23:04:44] "GET /seguimientos/fotos/ HTTP/1.1" 200 33649
+[29/Apr/2026 23:04:46] "GET /clientes/ HTTP/1.1" 200 40955
+[29/Apr/2026 23:05:17] "POST /clientes/2/estado-contacto/ HTTP/1.1" 302 0
+[29/Apr/2026 23:05:17] "GET /clientes/ HTTP/1.1" 200 40949
+[29/Apr/2026 23:05:38] "GET /clientes/nuevo/ HTTP/1.1" 200 52731
+[29/Apr/2026 23:05:43] "GET /clientes/ HTTP/1.1" 200 40949
+C:\Users\Michu\SistemaSRM\apps\clientes\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\clientes\forms.py changed, reloading.
+Watching for file changes with StatReloader
+[29/Apr/2026 23:35:09] "GET /clientes/ HTTP/1.1" 200 44171
+[29/Apr/2026 23:35:10] "GET /clientes/ HTTP/1.1" 200 44171
+[29/Apr/2026 23:35:11] "GET /clientes/ HTTP/1.1" 200 44171
+[29/Apr/2026 23:35:11] "GET /clientes/ HTTP/1.1" 200 44171
+[29/Apr/2026 23:35:11] "GET /clientes/ HTTP/1.1" 200 44171
+[29/Apr/2026 23:35:11] "GET /clientes/ HTTP/1.1" 200 44171
+[29/Apr/2026 23:35:23] "GET /clientes/nuevo/ HTTP/1.1" 200 57928
+C:\Users\Michu\SistemaSRM\apps\clientes\forms.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\clientes\views.py changed, reloading.
+Watching for file changes with StatReloader
+[29/Apr/2026 23:39:51] "GET /clientes/nuevo/ HTTP/1.1" 200 52731
+[29/Apr/2026 23:39:55] "GET / HTTP/1.1" 200 37095
+[29/Apr/2026 23:39:55] "GET /clientes/ HTTP/1.1" 200 40949
+C:\Users\Michu\SistemaSRM\apps\clientes\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Michu\SistemaSRM\apps\clientes\urls.py changed, reloading.
+Watching for file changes with StatReloader
+[29/Apr/2026 23:47:34] "GET /clientes/ HTTP/1.1" 200 44394
+[29/Apr/2026 23:47:35] "GET /clientes/ HTTP/1.1" 200 44394
+[29/Apr/2026 23:47:40] "GET /clientes/2/editar/ HTTP/1.1" 200 52880
+[29/Apr/2026 23:47:42] "GET /clientes/ HTTP/1.1" 200 44394
+[29/Apr/2026 23:47:50] "POST /clientes/rapido/ HTTP/1.1" 302 0
+[29/Apr/2026 23:47:50] "GET /clientes/ HTTP/1.1" 200 44596
+[29/Apr/2026 23:48:00] "GET /clientes/nuevo/ HTTP/1.1" 200 52731
+[29/Apr/2026 23:48:01] "GET /clientes/ HTTP/1.1" 200 44394
+[29/Apr/2026 23:48:05] "GET /clientes/2/editar/ HTTP/1.1" 200 52880
+[29/Apr/2026 23:48:06] "GET /clientes/ HTTP/1.1" 200 44394
+[29/Apr/2026 23:48:14] "POST /clientes/1/estado-contacto/ HTTP/1.1" 302 0
+[29/Apr/2026 23:48:14] "GET /clientes/ HTTP/1.1" 200 44388
+[29/Apr/2026 23:48:23] "GET /clientes/nuevo/?tipo=CITA HTTP/1.1" 200 52759
+[29/Apr/2026 23:48:27] "GET / HTTP/1.1" 200 37095
+[29/Apr/2026 23:48:29] "GET /seguimientos/ HTTP/1.1" 200 35917
+[29/Apr/2026 23:48:30] "GET /clientes/ HTTP/1.1" 200 44388
+[29/Apr/2026 23:50:02] "GET /clientes/2/editar/ HTTP/1.1" 200 52880
+[29/Apr/2026 23:50:06] "GET /clientes/ HTTP/1.1" 200 44388

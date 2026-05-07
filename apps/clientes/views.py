@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import ListView
 
+from apps.catalogo.models import Producto
 from apps.seguimiento.forms import FotoSeguimientoFormSet
 from apps.seguimiento.models import FotoSeguimiento, SeguimientoCliente
 from apps.usuarios.mixins import SoloPersonalMixin
@@ -147,6 +148,75 @@ class ClienteObservacionCreateView(LoginRequiredMixin, SoloPersonalMixin, View):
             observacion.save()
             messages.success(request, "Observacion agregada.")
         return HttpResponseRedirect(next_url)
+
+
+class ClienteSeguimientoCardActionView(LoginRequiredMixin, SoloPersonalMixin, View):
+    def post(self, request, cliente_pk, seguimiento_pk):
+        cliente = get_object_or_404(Cliente, pk=cliente_pk)
+        seguimiento = get_object_or_404(SeguimientoCliente, pk=seguimiento_pk, cliente=cliente)
+        observacion = (request.POST.get("observacion") or "").strip()
+        producto_id = request.POST.get("producto")
+        cantidad = request.POST.get("cantidad")
+        estado = request.POST.get("estado") or Pedido.Estado.PAGADO
+        acciones = []
+
+        if observacion:
+            fecha = timezone.localtime().strftime("%d/%m/%Y %H:%M")
+            nueva_observacion = f"[{fecha}] {observacion}"
+            seguimiento.observacion = "\n".join(filter(None, [seguimiento.observacion, nueva_observacion]))
+            seguimiento.save(update_fields=["observacion"])
+            acciones.append("observacion agregada")
+
+        if producto_id or cantidad:
+            if self.guardar_compra_desde_tarjeta(request, cliente, producto_id, cantidad, estado):
+                acciones.append("compra registrada")
+
+        if acciones:
+            messages.success(request, f"Seguimiento actualizado: {', '.join(acciones)}.")
+        else:
+            messages.info(request, "No ingresaste observacion ni compra para guardar.")
+
+        return HttpResponseRedirect(f"{reverse('clientes:detalle', args=[cliente.pk])}#seguimiento-{seguimiento.pk}")
+
+    def guardar_compra_desde_tarjeta(self, request, cliente, producto_id, cantidad, estado):
+        if not producto_id:
+            messages.error(request, "Selecciona un producto para registrar la compra.")
+            return False
+        try:
+            cantidad = int(cantidad or 0)
+        except ValueError:
+            cantidad = 0
+        if cantidad <= 0:
+            messages.error(request, "Indica una cantidad mayor a cero.")
+            return False
+
+        estados_validos = {value for value, _label in Pedido.Estado.choices}
+        if estado not in estados_validos:
+            estado = Pedido.Estado.PAGADO
+
+        with transaction.atomic():
+            producto = get_object_or_404(Producto.objects.select_for_update(), pk=producto_id, estado=Producto.Estado.ACTIVO)
+            pedido = Pedido.objects.create(
+                cliente=cliente,
+                usuario=request.user,
+                estado=estado,
+                observaciones="Compra registrada desde carta de seguimiento.",
+                subtotal=0,
+                descuento=0,
+                total=0,
+            )
+            DetallePedido.objects.create(
+                pedido=pedido,
+                producto=producto,
+                cantidad=cantidad,
+                precio_unitario=producto.precio,
+                subtotal=0,
+            )
+            pedido.recalcular_totales()
+            if estado != Pedido.Estado.CANCELADO and producto.stock_disponible > 0:
+                producto.stock_disponible = max(producto.stock_disponible - Decimal(cantidad), Decimal("0.00"))
+                producto.save(update_fields=["stock_disponible"])
+        return True
 
 
 class ClienteManageView(LoginRequiredMixin, SoloPersonalMixin, View):
@@ -475,6 +545,9 @@ class ClienteDetailView(ClienteUpdateView):
             estado=SeguimientoCliente.Estado.CANCELADO
         )[:8]
         context["ultimos_seguimientos"] = cliente.seguimientos.all()[:10]
+        context["seguimientos_tarjetas"] = cliente.seguimientos.all()[:12]
+        context["productos_activos"] = Producto.objects.filter(estado=Producto.Estado.ACTIVO).order_by("nombre")
+        context["estados_pedido"] = Pedido.Estado.choices
         fotos = FotoSeguimiento.objects.filter(cliente=cliente).select_related("seguimiento")
         fecha = self.request.GET.get("fecha")
         if fecha:

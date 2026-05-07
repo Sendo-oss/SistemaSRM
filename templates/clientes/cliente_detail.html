@@ -332,6 +332,82 @@
     </div>
 </div>
 </form>
+
+<div class="card soft-card mt-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">
+            <div>
+                <h2 class="h5 mb-0">Cartas de seguimiento</h2>
+                <div class="text-secondary small">Aqui puedes completar cada seguimiento con observaciones y compras.</div>
+            </div>
+        </div>
+        <div class="row g-3">
+            {% for seguimiento in seguimientos_tarjetas %}
+                <div class="col-12" id="seguimiento-{{ seguimiento.pk }}">
+                    <div class="photo-upload-panel">
+                        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+                            <div>
+                                <div class="fw-bold">{{ seguimiento.get_tipo_interaccion_display }}{% if seguimiento.asunto %} - {{ seguimiento.asunto }}{% endif %}</div>
+                                <div class="text-secondary small">{{ seguimiento.fecha_referencia|date:"l d \d\e F \d\e Y H:i" }}</div>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <span class="soft-badge">{{ seguimiento.get_estado_display }}</span>
+                                <a class="btn btn-sm btn-outline-primary" href="{% url 'seguimiento:detalle' seguimiento.pk %}">Abrir</a>
+                            </div>
+                        </div>
+
+                        {% if seguimiento.observacion %}
+                            <div class="card-note mb-3">
+                                <div class="client-summary-label mb-1">Observaciones actuales</div>
+                                <div style="white-space: pre-wrap;">{{ seguimiento.observacion }}</div>
+                            </div>
+                        {% endif %}
+
+                        <form method="post" action="{% url 'clientes:seguimiento_tarjeta' cliente.pk seguimiento.pk %}" class="seguimiento-card-form">
+                            {% csrf_token %}
+                            <div class="row g-3 align-items-end seguimiento-card-row">
+                                <div class="col-lg-4">
+                                    <label class="form-label" for="seguimiento-observacion-{{ seguimiento.pk }}">Nueva observacion</label>
+                                    <textarea class="form-control" id="seguimiento-observacion-{{ seguimiento.pk }}" name="observacion" rows="2" placeholder="Agregar observacion a esta carta"></textarea>
+                                </div>
+                                <div class="col-lg-3 col-md-6">
+                                    <label class="form-label" for="seguimiento-producto-{{ seguimiento.pk }}">Producto</label>
+                                    <select class="form-select seguimiento-producto" id="seguimiento-producto-{{ seguimiento.pk }}" name="producto">
+                                        <option value="">Sin producto</option>
+                                        {% for producto in productos_activos %}
+                                            <option value="{{ producto.pk }}">{{ producto.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-lg-2 col-md-3">
+                                    <label class="form-label" for="seguimiento-cantidad-{{ seguimiento.pk }}">Cantidad</label>
+                                    <input class="form-control seguimiento-cantidad" id="seguimiento-cantidad-{{ seguimiento.pk }}" type="number" name="cantidad" min="1" placeholder="Cantidad">
+                                </div>
+                                <div class="col-lg-2 col-md-3">
+                                    <label class="form-label" for="seguimiento-estado-{{ seguimiento.pk }}">Estado</label>
+                                    <select class="form-select" id="seguimiento-estado-{{ seguimiento.pk }}" name="estado">
+                                        {% for value, label in estados_pedido %}
+                                            <option value="{{ value }}" {% if value == "PAGADO" %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-lg-1">
+                                    <button class="btn btn-primary w-100" type="submit">Guardar</button>
+                                </div>
+                                <div class="col-12">
+                                    <div class="compra-meta seguimiento-compra-resumen">Si eliges producto, aqui aparecera precio, stock y total.</div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12 text-secondary">Este cliente todavia no tiene cartas de seguimiento.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
 {{ productos_json|json_script:"productos-compra-data" }}
 <script>
     const productosCompra = JSON.parse(document.getElementById("productos-compra-data").textContent);
@@ -351,12 +427,33 @@
                 return;
             }
             const total = Number(producto.precio || 0) * cantidadValor;
-            resumen.textContent = `Precio $${money(producto.precio)} · Stock ${producto.stock_disponible} · Total $${money(total)}`;
+            resumen.textContent = `Precio $${money(producto.precio)} - Stock ${producto.stock_disponible} - Total $${money(total)}`;
         };
         select?.addEventListener("change", () => {
             if (select.value && !cantidad.value) cantidad.value = 1;
             actualizarResumen();
         });
+        cantidad?.addEventListener("input", actualizarResumen);
+        actualizarResumen();
+    });
+
+    document.querySelectorAll(".seguimiento-card-row").forEach((row) => {
+        const select = row.querySelector(".seguimiento-producto");
+        const cantidad = row.querySelector(".seguimiento-cantidad");
+        const resumen = row.querySelector(".seguimiento-compra-resumen");
+        const actualizarResumen = () => {
+            if (!resumen) return;
+            const producto = findProducto(select?.value);
+            const cantidadValor = Number(cantidad?.value || 0);
+            if (!producto) {
+                resumen.textContent = "Si eliges producto, aqui aparecera precio, stock y total.";
+                return;
+            }
+            if (!cantidad.value) cantidad.value = 1;
+            const total = Number(producto.precio || 0) * Number(cantidad.value || 0);
+            resumen.textContent = `Precio $${money(producto.precio)} - Stock ${producto.stock_disponible} - Total $${money(total)}`;
+        };
+        select?.addEventListener("change", actualizarResumen);
         cantidad?.addEventListener("input", actualizarResumen);
         actualizarResumen();
     });

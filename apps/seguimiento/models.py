@@ -1,10 +1,17 @@
 from pathlib import Path
+from io import BytesIO
 
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
+try:
+    from PIL import Image, ImageOps
+except ImportError:
+    Image = None
+    ImageOps = None
 
 
 def ruta_foto_seguimiento(instance, filename):
@@ -13,6 +20,31 @@ def ruta_foto_seguimiento(instance, filename):
     if seguimiento.carpeta_tratamiento:
         return f"{seguimiento.carpeta_tratamiento}/{nombre_archivo}"
     return f"seguimientos/cliente_{seguimiento.cliente_id}/{timezone.now():%Y/%m/%d}/{nombre_archivo}"
+
+
+def optimizar_imagen_subida(archivo, max_dimension=1600, calidad=75):
+    if Image is None or ImageOps is None:
+        return archivo
+
+    extension = Path(archivo.name).suffix.lower()
+    if extension not in {".jpg", ".jpeg", ".png", ".webp"}:
+        return archivo
+
+    try:
+        archivo.seek(0)
+        imagen = Image.open(archivo)
+        imagen = ImageOps.exif_transpose(imagen)
+    except Exception:
+        return archivo
+
+    if imagen.mode not in {"RGB", "L"}:
+        imagen = imagen.convert("RGB")
+
+    imagen.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
+    salida = BytesIO()
+    imagen.save(salida, format="WEBP", quality=calidad, method=6, optimize=True)
+    nombre = f"{Path(archivo.name).stem}.webp"
+    return ContentFile(salida.getvalue(), name=nombre)
 
 
 class SeguimientoCliente(models.Model):
@@ -122,4 +154,6 @@ class FotoSeguimiento(models.Model):
     def save(self, *args, **kwargs):
         if self.seguimiento_id:
             self.cliente = self.seguimiento.cliente
+        if self.archivo and not str(self.archivo.name).startswith(("seguimientos/", "tratamientos/")):
+            self.archivo = optimizar_imagen_subida(self.archivo)
         super().save(*args, **kwargs)
